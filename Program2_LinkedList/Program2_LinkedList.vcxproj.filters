@@ -44,6 +44,9 @@
     <ClInclude Include="Code\PatientLinkedList.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Code\SearchResult.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
     <ClInclude Include="Code\SortKey.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>

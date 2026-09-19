@@ -18,6 +18,20 @@
       <Platform>x64</Platform>
     </ProjectConfiguration>
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="Code\AgeGroupAnalyzer.cpp" />
+    <ClCompile Include="Code\BillingSummary.cpp" />
+    <ClCompile Include="Code\PatientArray.cpp" />
+    <ClCompile Include="Code\Test_Array.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Code\AgeGroupAnalyzer.hpp" />
+    <ClInclude Include="Code\BillingSummary.hpp" />
+    <ClInclude Include="Code\Patient.hpp" />
+    <ClInclude Include="Code\PatientArray.hpp" />
+    <ClInclude Include="Code\SearchResult.hpp" />
+    <ClInclude Include="Code\SortKey.hpp" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>18.0</VCProjectVersion>
     <Keyword>Win32Proj</Keyword>
@@ -138,19 +152,6 @@
       <EnableSegmentHeap>true</EnableSegmentHeap>
     </Manifest>
   </ItemDefinitionGroup>
-  <ItemGroup>
-    <ClInclude Include="Code\AgeGroupAnalyzer.hpp" />
-    <ClInclude Include="Code\BillingSummary.hpp" />
-    <ClInclude Include="Code\Patient.hpp" />
-    <ClInclude Include="Code\PatientArray.hpp" />
-    <ClInclude Include="Code\SortKey.hpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClCompile Include="Code\AgeGroupAnalyzer.cpp" />
-    <ClCompile Include="Code\BillingSummary.cpp" />
-    <ClCompile Include="Code\PatientArray.cpp" />
-    <ClCompile Include="Code\Test_Array.cpp" />
-  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
