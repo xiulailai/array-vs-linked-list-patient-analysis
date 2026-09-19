@@ -1,7 +1,12 @@
 {
   "Version": 1,
-  "WorkspaceRootPath": "D:\\Uni Learning\\Data Structured\\GroupP-DSTR_ArrayVsLinkedList\\GroupP-DSTR_ArrayVsLinkedList\\Program1_Array\\",
-  "Documents": [],
+  "WorkspaceRootPath": "D:\\Uni Learning\\Data Structured\\GroupP_DSTR_Assignment\\Program1_Array\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{5B5291CA-28DD-4467-9AC8-A5E31DC4D2D9}|Program1_Array.vcxproj|D:\\Uni Learning\\Data Structured\\GroupP_DSTR_Assignment\\Program1_Array\\Code\\PatientArray.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
+      "RelativeMoniker": "D:0:0:{5B5291CA-28DD-4467-9AC8-A5E31DC4D2D9}|Program1_Array.vcxproj|solutionrelative:Code\\PatientArray.cpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
+    }
+  ],
   "DocumentGroupContainers": [
     {
       "Orientation": 0,
@@ -9,11 +14,28 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": -1,
+          "SelectedChildIndex": 2,
           "Children": [
             {
               "$type": "Bookmark",
+              "Name": "ST:128:0:{75188d03-9892-4ae2-abf1-207126247ce5}"
+            },
+            {
+              "$type": "Bookmark",
               "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "PatientArray.cpp",
+              "DocumentMoniker": "D:\\Uni Learning\\Data Structured\\GroupP_DSTR_Assignment\\Program1_Array\\Code\\PatientArray.cpp",
+              "RelativeDocumentMoniker": "Code\\PatientArray.cpp",
+              "ToolTip": "D:\\Uni Learning\\Data Structured\\GroupP_DSTR_Assignment\\Program1_Array\\Code\\PatientArray.cpp",
+              "RelativeToolTip": "Code\\PatientArray.cpp",
+              "ViewState": "AgIAACEAAAAAAAAAAAAAABEAAAAhAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000677|",
+              "WhenOpened": "2026-09-19T06:31:34.803Z",
+              "EditorCaption": ""
             }
           ]
         }

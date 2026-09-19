@@ -1,10 +1,16 @@
+// ============================================================
+// PatientLinkedList.cpp
+// CT077-3-2-DSTR  |  Program 2: SINGLY LINKED LIST Implementation
 // Implementation of the linked-list-based patient collection.
+// ============================================================
 #include "PatientLinkedList.hpp"
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <iomanip>
+#include <chrono>
 using namespace std;
+using namespace std::chrono;
 
 PatientLinkedList::PatientLinkedList() {
     head = nullptr;
@@ -127,4 +133,208 @@ Patient* PatientLinkedList::toArray(int& outCount) const {
         i++;
     }
     return copy;
+}
+
+// ---------- Bubble Sort ----------
+SortResult PatientLinkedList::bubbleSort(SortKey key) {
+    SortResult result;
+    result.comparisons = 0;
+    result.swaps = 0;
+
+    auto start = high_resolution_clock::now();
+
+    if (head != nullptr) {
+        bool swappedThisPass;
+        Node* lastSorted = nullptr;
+
+        do {
+            swappedThisPass = false;
+            Node* current = head;
+
+            while (current->next != lastSorted) {
+                result.comparisons++;
+
+                if (getSortValue(current->data, key) > getSortValue(current->next->data, key)) {
+                    Patient temp = current->data;
+                    current->data = current->next->data;
+                    current->next->data = temp;
+                    result.swaps++;
+                    swappedThisPass = true;
+                }
+
+                current = current->next;
+            }
+
+            lastSorted = current;
+        } while (swappedThisPass);
+    }
+
+    auto end = high_resolution_clock::now();
+    result.timeMs = duration<double, std::milli>(end - start).count();
+
+    return result;
+}
+
+// ---------- Searching (Section 7) ----------
+
+SearchResult PatientLinkedList::searchByAgeRangeUnsorted(int minAge, int maxAge,
+    Patient*& outMatches, int& outMatchCount) const {
+    SearchResult result;
+    result.comparisons = 0;
+    outMatchCount = 0;
+
+    outMatches = new Patient[size > 0 ? size : 1];
+
+    auto start = high_resolution_clock::now();
+
+    // No way to skip nodes - every node must be visited and checked.
+    Node* current = head;
+    while (current != nullptr) {
+        result.comparisons++;
+        if (current->data.age >= minAge && current->data.age <= maxAge) {
+            outMatches[outMatchCount] = current->data;
+            outMatchCount++;
+        }
+        current = current->next;
+    }
+
+    auto end = high_resolution_clock::now();
+    result.timeMs = duration<double, std::milli>(end - start).count();
+    result.matchCount = outMatchCount;
+
+    return result;
+}
+
+SearchResult PatientLinkedList::searchByAgeRangeSorted(int minAge, int maxAge,
+    Patient*& outMatches, int& outMatchCount) const {
+    SearchResult result;
+    result.comparisons = 0;
+    outMatchCount = 0;
+
+    outMatches = new Patient[size > 0 ? size : 1];
+
+    auto start = high_resolution_clock::now();
+
+    // Requires the list to already be sorted ascending by Age. There is
+    // still no way to "jump" to the boundary (no random access), so we
+    // must walk from head - but because it's sorted, we CAN stop the
+    // instant we pass maxAge, instead of checking every remaining node.
+    Node* current = head;
+    while (current != nullptr) {
+        result.comparisons++;
+        if (current->data.age > maxAge)
+            break; // sorted ascending - no more matches possible
+        if (current->data.age >= minAge) {
+            outMatches[outMatchCount] = current->data;
+            outMatchCount++;
+        }
+        current = current->next;
+    }
+
+    auto end = high_resolution_clock::now();
+    result.timeMs = duration<double, std::milli>(end - start).count();
+    result.matchCount = outMatchCount;
+
+    return result;
+}
+
+SearchResult PatientLinkedList::searchByCareType(const string& careType,
+    Patient*& outMatches, int& outMatchCount) const {
+    SearchResult result;
+    result.comparisons = 0;
+    outMatchCount = 0;
+
+    outMatches = new Patient[size > 0 ? size : 1];
+
+    auto start = high_resolution_clock::now();
+
+    Node* current = head;
+    while (current != nullptr) {
+        result.comparisons++;
+        if (current->data.careType == careType) {
+            outMatches[outMatchCount] = current->data;
+            outMatchCount++;
+        }
+        current = current->next;
+    }
+
+    auto end = high_resolution_clock::now();
+    result.timeMs = duration<double, std::milli>(end - start).count();
+    result.matchCount = outMatchCount;
+
+    return result;
+}
+
+SearchResult PatientLinkedList::searchByDurationThresholdUnsorted(int minHours,
+    Patient*& outMatches, int& outMatchCount) const {
+    SearchResult result;
+    result.comparisons = 0;
+    outMatchCount = 0;
+
+    outMatches = new Patient[size > 0 ? size : 1];
+
+    auto start = high_resolution_clock::now();
+
+    Node* current = head;
+    while (current != nullptr) {
+        result.comparisons++;
+        if (current->data.lengthOfStay > minHours) {
+            outMatches[outMatchCount] = current->data;
+            outMatchCount++;
+        }
+        current = current->next;
+    }
+
+    auto end = high_resolution_clock::now();
+    result.timeMs = duration<double, std::milli>(end - start).count();
+    result.matchCount = outMatchCount;
+
+    return result;
+}
+
+SearchResult PatientLinkedList::searchByDurationThresholdSorted(int minHours,
+    Patient*& outMatches, int& outMatchCount) const {
+    SearchResult result;
+    result.comparisons = 0;
+    outMatchCount = 0;
+
+    outMatches = new Patient[size > 0 ? size : 1];
+
+    auto start = high_resolution_clock::now();
+
+    // Requires the list to already be sorted ascending by LengthOfStay.
+    // Once the boundary is found, every remaining node automatically
+    // qualifies - so we stop COUNTING comparisons there, even though we
+    // must still walk the pointers to collect the remaining matches.
+    Node* current = head;
+    bool foundBoundary = false;
+
+    while (current != nullptr) {
+        if (!foundBoundary) {
+            result.comparisons++;
+            if (current->data.lengthOfStay > minHours)
+                foundBoundary = true;
+        }
+
+        if (foundBoundary) {
+            outMatches[outMatchCount] = current->data;
+            outMatchCount++;
+        }
+
+        current = current->next;
+    }
+
+    auto end = high_resolution_clock::now();
+    result.timeMs = duration<double, std::milli>(end - start).count();
+    result.matchCount = outMatchCount;
+
+    return result;
+}
+
+// ---------- Performance Analysis (Section 8) ----------
+long long PatientLinkedList::getMemoryUsageBytes() const {
+    // Exactly 'size' nodes exist - no unused-capacity waste like the
+    // array's doubling strategy - but each Node adds one pointer's
+    // worth of overhead (the 'next' field) that the array doesn't pay.
+    return (long long)size * sizeof(Node) + sizeof(*this);
 }

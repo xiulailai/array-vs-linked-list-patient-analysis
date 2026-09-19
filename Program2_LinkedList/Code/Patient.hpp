@@ -1,3 +1,7 @@
+// ============================================================
+// Patient.hpp
+// CT077-3-2-DSTR  |  Shared Patient data structure (Linked List version)
+// ============================================================
 #ifndef PATIENT_HPP
 #define PATIENT_HPP
 

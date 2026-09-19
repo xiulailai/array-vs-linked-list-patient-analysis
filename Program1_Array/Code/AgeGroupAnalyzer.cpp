@@ -1,3 +1,7 @@
+// ============================================================
+// AgeGroupAnalyzer.cpp
+// CT077-3-2-DSTR  |  Age Group / Cost Analysis
+// ============================================================
 #include "AgeGroupAnalyzer.hpp"
 #include <iostream>
 #include <iomanip>
@@ -23,6 +27,7 @@ AgeGroupAnalyzer::AgeGroupAnalyzer() {
     for (int i = 0; i < NUM_GROUPS; i++) {
         groups[i].patientCount = 0;
         groups[i].totalCost = 0.0;
+        groups[i].totalLengthOfStay = 0;
         groups[i].careTypeCount = 0;
     }
 }
@@ -42,6 +47,7 @@ void AgeGroupAnalyzer::addToGroup(int groupIndex, const Patient& p) {
     double cost = p.lengthOfStay * p.baseCostPerHour * p.daysVisitsPerYear;
     group.patientCount++;
     group.totalCost += cost;
+    group.totalLengthOfStay += p.lengthOfStay;
 
     // Find an existing CareType entry for this group, or add a new one
     int foundIndex = -1;
@@ -132,4 +138,36 @@ void AgeGroupAnalyzer::printReport() const {
         cout << "Average Cost per Patient (Group): $" << groupAvgCost << endl;
         cout << "Total Patients in Group: " << group.patientCount << endl;
     }
+}
+
+// ---------- Accessors for cross-dataset / cross-age-group comparisons ----------
+
+int AgeGroupAnalyzer::getGroupCount() {
+    return NUM_GROUPS;
+}
+
+string AgeGroupAnalyzer::getGroupLabel(int index) const {
+    return groups[index].rangeLabel;
+}
+
+string AgeGroupAnalyzer::getGroupDescription(int index) const {
+    return groups[index].description;
+}
+
+int AgeGroupAnalyzer::getGroupPatientCount(int index) const {
+    return groups[index].patientCount;
+}
+
+double AgeGroupAnalyzer::getGroupTotalCost(int index) const {
+    return groups[index].totalCost;
+}
+
+double AgeGroupAnalyzer::getGroupAverageCost(int index) const {
+    return (groups[index].patientCount > 0)
+        ? (groups[index].totalCost / groups[index].patientCount) : 0.0;
+}
+
+double AgeGroupAnalyzer::getGroupAverageLengthOfStay(int index) const {
+    return (groups[index].patientCount > 0)
+        ? (double)groups[index].totalLengthOfStay / groups[index].patientCount : 0.0;
 }

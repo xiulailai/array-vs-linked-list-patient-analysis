@@ -1,0 +1,14 @@
+{
+    "version": 1,
+    "revision": 0,
+    "rules": [
+        {
+            "primary-output": "Program1_Array\\x64\\Debug\\PatientArray.obj",
+            "outputs": [
+                "Program1_Array\\x64\\Debug\\PatientArray.cpp.obj.dt.module.json",
+                "Program1_Array\\x64\\Debug\\PatientArray.cpp.obj.dt.d.json"
+            ],
+            "requires": []
+        }
+    ]
+}

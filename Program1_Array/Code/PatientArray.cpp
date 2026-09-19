@@ -1,10 +1,16 @@
+// ============================================================
+// PatientArray.cpp
+// CT077-3-2-DSTR  |  Program 1: ARRAY Implementation
 // Implementation of the array-based patient collection.
+// ============================================================
 #include "PatientArray.hpp"
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <iomanip>
+#include <chrono>
 using namespace std;
+using namespace std::chrono;
 
 PatientArray::PatientArray(int initialCapacity) {
     capacity = initialCapacity;
@@ -111,4 +117,205 @@ Patient* PatientArray::toArray(int& outCount) const {
     for (int i = 0; i < size; i++)
         copy[i] = list[i];
     return copy;
+}
+
+// ---------- Bubble Sort ----------
+SortResult PatientArray::bubbleSort(SortKey key) {
+    SortResult result;
+    result.comparisons = 0;
+    result.swaps = 0;
+
+    auto start = high_resolution_clock::now();
+
+    for (int i = 0; i < size - 1; i++) {
+        bool swappedThisPass = false;
+
+        for (int j = 0; j < size - 1 - i; j++) {
+            result.comparisons++;
+
+            if (getSortValue(list[j], key) > getSortValue(list[j + 1], key)) {
+                Patient temp = list[j];
+                list[j] = list[j + 1];
+                list[j + 1] = temp;
+                result.swaps++;
+                swappedThisPass = true;
+            }
+        }
+
+        if (!swappedThisPass)
+            break; // already sorted - stop early
+    }
+
+    auto end = high_resolution_clock::now();
+    result.timeMs = duration<double, std::milli>(end - start).count();
+
+    return result;
+}
+
+// ---------- Searching (Section 7) ----------
+
+SearchResult PatientArray::searchByAgeRangeUnsorted(int minAge, int maxAge,
+    Patient*& outMatches, int& outMatchCount) const {
+    SearchResult result;
+    result.comparisons = 0;
+    outMatchCount = 0;
+
+    outMatches = new Patient[size > 0 ? size : 1]; // worst case: all match
+
+    auto start = high_resolution_clock::now();
+
+    // Every element must be checked - matches could be anywhere.
+    for (int i = 0; i < size; i++) {
+        result.comparisons++;
+        if (list[i].age >= minAge && list[i].age <= maxAge) {
+            outMatches[outMatchCount] = list[i];
+            outMatchCount++;
+        }
+    }
+
+    auto end = high_resolution_clock::now();
+    result.timeMs = duration<double, std::milli>(end - start).count();
+    result.matchCount = outMatchCount;
+
+    return result;
+}
+
+SearchResult PatientArray::searchByAgeRangeSorted(int minAge, int maxAge,
+    Patient*& outMatches, int& outMatchCount) const {
+    SearchResult result;
+    result.comparisons = 0;
+    outMatchCount = 0;
+
+    outMatches = new Patient[size > 0 ? size : 1];
+
+    auto start = high_resolution_clock::now();
+
+    // Binary search for the FIRST index where age >= minAge.
+    // Requires the array to already be sorted ascending by Age.
+    int low = 0, high = size - 1, boundary = size; // default: no match
+    while (low <= high) {
+        int mid = (low + high) / 2;
+        result.comparisons++;
+        if (list[mid].age >= minAge) {
+            boundary = mid;
+            high = mid - 1; // keep looking left for an earlier match
+        }
+        else {
+            low = mid + 1;
+        }
+    }
+
+    // Data is sorted, so matches are contiguous from 'boundary' onward.
+    // We can stop the instant we pass maxAge - no need to scan the rest.
+    for (int i = boundary; i < size; i++) {
+        result.comparisons++;
+        if (list[i].age > maxAge)
+            break;
+        outMatches[outMatchCount] = list[i];
+        outMatchCount++;
+    }
+
+    auto end = high_resolution_clock::now();
+    result.timeMs = duration<double, std::milli>(end - start).count();
+    result.matchCount = outMatchCount;
+
+    return result;
+}
+
+SearchResult PatientArray::searchByCareType(const string& careType,
+    Patient*& outMatches, int& outMatchCount) const {
+    SearchResult result;
+    result.comparisons = 0;
+    outMatchCount = 0;
+
+    outMatches = new Patient[size > 0 ? size : 1];
+
+    auto start = high_resolution_clock::now();
+
+    // CareType has no natural numeric order, so this is always linear.
+    for (int i = 0; i < size; i++) {
+        result.comparisons++;
+        if (list[i].careType == careType) {
+            outMatches[outMatchCount] = list[i];
+            outMatchCount++;
+        }
+    }
+
+    auto end = high_resolution_clock::now();
+    result.timeMs = duration<double, std::milli>(end - start).count();
+    result.matchCount = outMatchCount;
+
+    return result;
+}
+
+SearchResult PatientArray::searchByDurationThresholdUnsorted(int minHours,
+    Patient*& outMatches, int& outMatchCount) const {
+    SearchResult result;
+    result.comparisons = 0;
+    outMatchCount = 0;
+
+    outMatches = new Patient[size > 0 ? size : 1];
+
+    auto start = high_resolution_clock::now();
+
+    for (int i = 0; i < size; i++) {
+        result.comparisons++;
+        if (list[i].lengthOfStay > minHours) {
+            outMatches[outMatchCount] = list[i];
+            outMatchCount++;
+        }
+    }
+
+    auto end = high_resolution_clock::now();
+    result.timeMs = duration<double, std::milli>(end - start).count();
+    result.matchCount = outMatchCount;
+
+    return result;
+}
+
+SearchResult PatientArray::searchByDurationThresholdSorted(int minHours,
+    Patient*& outMatches, int& outMatchCount) const {
+    SearchResult result;
+    result.comparisons = 0;
+    outMatchCount = 0;
+
+    outMatches = new Patient[size > 0 ? size : 1];
+
+    auto start = high_resolution_clock::now();
+
+    // Binary search for the FIRST index where lengthOfStay > minHours.
+    // Requires the array to already be sorted ascending by LengthOfStay.
+    int low = 0, high = size - 1, boundary = size;
+    while (low <= high) {
+        int mid = (low + high) / 2;
+        result.comparisons++;
+        if (list[mid].lengthOfStay > minHours) {
+            boundary = mid;
+            high = mid - 1;
+        }
+        else {
+            low = mid + 1;
+        }
+    }
+
+    // Everything from 'boundary' to the end automatically qualifies -
+    // no further comparisons needed thanks to the sort order.
+    for (int i = boundary; i < size; i++) {
+        outMatches[outMatchCount] = list[i];
+        outMatchCount++;
+    }
+
+    auto end = high_resolution_clock::now();
+    result.timeMs = duration<double, std::milli>(end - start).count();
+    result.matchCount = outMatchCount;
+
+    return result;
+}
+
+// ---------- Performance Analysis (Section 8) ----------
+long long PatientArray::getMemoryUsageBytes() const {
+    // Uses 'capacity' (allocated) rather than 'size' (used) - this is
+    // deliberate, since any unused slots left over from the doubling
+    // resize strategy are still real allocated memory sitting idle.
+    return (long long)capacity * sizeof(Patient) + sizeof(*this);
 }
