@@ -1,12 +1,7 @@
 {
   "Version": 1,
   "WorkspaceRootPath": "D:\\Uni Learning\\Data Structured\\GroupP_DSTR_Assignment\\Program1_Array\\",
-  "Documents": [
-    {
-      "AbsoluteMoniker": "D:0:0:{5B5291CA-28DD-4467-9AC8-A5E31DC4D2D9}|Program1_Array.vcxproj|D:\\Uni Learning\\Data Structured\\GroupP_DSTR_Assignment\\Program1_Array\\Code\\Patient.hpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}",
-      "RelativeMoniker": "D:0:0:{5B5291CA-28DD-4467-9AC8-A5E31DC4D2D9}|Program1_Array.vcxproj|solutionrelative:Code\\Patient.hpp||{D0E1A5C6-B359-4E41-9B60-3365922C2A22}"
-    }
-  ],
+  "Documents": [],
   "DocumentGroupContainers": [
     {
       "Orientation": 0,
@@ -14,24 +9,11 @@
       "DocumentGroups": [
         {
           "DockedWidth": 200,
-          "SelectedChildIndex": 1,
+          "SelectedChildIndex": -1,
           "Children": [
             {
               "$type": "Bookmark",
               "Name": "ST:128:0:{75188d03-9892-4ae2-abf1-207126247ce5}"
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 0,
-              "Title": "Patient.hpp",
-              "DocumentMoniker": "D:\\Uni Learning\\Data Structured\\GroupP_DSTR_Assignment\\Program1_Array\\Code\\Patient.hpp",
-              "RelativeDocumentMoniker": "Code\\Patient.hpp",
-              "ToolTip": "D:\\Uni Learning\\Data Structured\\GroupP_DSTR_Assignment\\Program1_Array\\Code\\Patient.hpp",
-              "RelativeToolTip": "Code\\Patient.hpp",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000680|",
-              "WhenOpened": "2026-09-22T07:02:16.631Z",
-              "EditorCaption": ""
             }
           ]
         }
