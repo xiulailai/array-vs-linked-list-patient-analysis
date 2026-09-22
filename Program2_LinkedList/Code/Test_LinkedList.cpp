@@ -365,5 +365,74 @@ int main() {
     cout << "but each node carries one extra pointer ('next') per element -\n";
     cout << "see PatientLinkedList::getMemoryUsageBytes comments.\n";
 
+    // ==================================================================
+    // SECTION 9: CLINICAL INSIGHTS - METROHEALTH SYSTEM-WIDE SUMMARY
+    // Combines all 3 facilities into one network-wide view to directly
+    // answer: "which demographic group generates the highest billing"
+    // and "which CareType has the highest patient traffic" (assignment
+    // brief, Section 9). The rest of Section 9 (recommendations) is
+    // written up in the Word documentation using these numbers.
+    // ==================================================================
+    cout << "\n\n==================================================\n";
+    cout << " CLINICAL INSIGHTS - METROHEALTH SYSTEM-WIDE SUMMARY\n";
+    cout << "==================================================\n";
+
+    // Reload and combine all 3 facilities into one array
+    PatientLinkedList combinedFacilities[NUM_DATASETS];
+    int totalCombinedCount = 0;
+    for (int d = 0; d < NUM_DATASETS; d++) {
+        combinedFacilities[d].loadFromCSV(filenames[d]);
+        totalCombinedCount += combinedFacilities[d].getSize();
+    }
+
+    Patient* combinedPatients = new Patient[totalCombinedCount > 0 ? totalCombinedCount : 1];
+    int insertPos = 0;
+    for (int d = 0; d < NUM_DATASETS; d++) {
+        int countD;
+        Patient* arrD = combinedFacilities[d].toArray(countD);
+        for (int i = 0; i < countD; i++)
+            combinedPatients[insertPos++] = arrD[i];
+        delete[] arrD;
+    }
+
+    cout << "\nTotal patients across MetroHealth System: " << totalCombinedCount << "\n";
+
+    // ---- Highest-billing age group, network-wide ----
+    AgeGroupAnalyzer networkAgeAnalyzer;
+    networkAgeAnalyzer.analyze(combinedPatients, totalCombinedCount);
+
+    int highestBillingGroup = 0;
+    for (int g = 1; g < numGroups; g++) {
+        if (networkAgeAnalyzer.getGroupTotalCost(g) > networkAgeAnalyzer.getGroupTotalCost(highestBillingGroup))
+            highestBillingGroup = g;
+    }
+
+    cout << fixed << setprecision(2);
+    cout << "\nHighest-billing age group (network-wide): "
+        << networkAgeAnalyzer.getGroupLabel(highestBillingGroup) << " ("
+        << networkAgeAnalyzer.getGroupDescription(highestBillingGroup) << ")\n";
+    cout << "  -> Total Cost: $" << networkAgeAnalyzer.getGroupTotalCost(highestBillingGroup) << "\n";
+    cout << "  -> Patients: " << networkAgeAnalyzer.getGroupPatientCount(highestBillingGroup) << "\n";
+
+    // ---- Highest-traffic CareType, network-wide ----
+    BillingSummary networkBilling;
+    networkBilling.analyze(combinedPatients, totalCombinedCount);
+
+    int highestTrafficIndex = 0;
+    for (int i = 1; i < networkBilling.getCareTypeCount(); i++) {
+        if (networkBilling.getCareTypePatientCount(i) > networkBilling.getCareTypePatientCount(highestTrafficIndex))
+            highestTrafficIndex = i;
+    }
+
+    cout << "\nHighest-traffic Care Type (network-wide): "
+        << networkBilling.getCareTypeLabel(highestTrafficIndex)
+        << " (" << networkBilling.getCareTypePatientCount(highestTrafficIndex) << " patients, $"
+        << networkBilling.getCareTypeTotalCost(highestTrafficIndex) << " total cost)\n";
+
+    cout << "\n--- Full Network-Wide Billing Summary (All Facilities Combined) ---\n";
+    networkBilling.printReport("MetroHealth System (All Facilities)");
+
+    delete[] combinedPatients;
+
     return 0;
 }

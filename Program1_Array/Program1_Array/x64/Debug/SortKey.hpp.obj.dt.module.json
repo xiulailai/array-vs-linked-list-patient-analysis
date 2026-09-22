@@ -1,0 +1,14 @@
+{
+    "version": 1,
+    "revision": 0,
+    "rules": [
+        {
+            "primary-output": "Program1_Array\\x64\\Debug\\SortKey.obj",
+            "outputs": [
+                "Program1_Array\\x64\\Debug\\SortKey.hpp.obj.dt.module.json",
+                "Program1_Array\\x64\\Debug\\SortKey.hpp.obj.dt.d.json"
+            ],
+            "requires": []
+        }
+    ]
+}

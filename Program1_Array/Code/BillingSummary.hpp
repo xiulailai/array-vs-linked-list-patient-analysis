@@ -1,7 +1,11 @@
+// ============================================================
+// BillingSummary.hpp
+// CT077-3-2-DSTR  |  Dataset-Level Billing Summary
 // Computes total billing and CareType breakdown across an
 // ENTIRE dataset (not scoped to an age group). Works off a
 // plain Patient array, same pattern as AgeGroupAnalyzer, so it
 // is reusable unchanged by both the array and linked-list programs.
+// ============================================================
 #ifndef BILLING_SUMMARY_HPP
 #define BILLING_SUMMARY_HPP
 
@@ -41,6 +45,12 @@ public:
     double getTotalCost() const;
     int getTotalPatients() const;
     double getAverageLengthOfStay() const;
+
+    // ---------- CareType accessors (Section 9 - Clinical Insights) ----------
+    int getCareTypeCount() const;
+    string getCareTypeLabel(int index) const;
+    int getCareTypePatientCount(int index) const;
+    double getCareTypeTotalCost(int index) const;
 };
 
 #endif

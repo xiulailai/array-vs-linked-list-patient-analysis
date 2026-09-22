@@ -1,3 +1,7 @@
+// ============================================================
+// BillingSummary.cpp
+// CT077-3-2-DSTR  |  Dataset-Level Billing Summary
+// ============================================================
 #include "BillingSummary.hpp"
 #include <iostream>
 #include <iomanip>
@@ -88,4 +92,21 @@ int BillingSummary::getTotalPatients() const {
 
 double BillingSummary::getAverageLengthOfStay() const {
     return (totalPatients > 0) ? (double)totalLengthOfStay / totalPatients : 0.0;
+}
+
+// ---------- CareType accessors (Section 9 - Clinical Insights) ----------
+int BillingSummary::getCareTypeCount() const {
+    return careTypeCount;
+}
+
+string BillingSummary::getCareTypeLabel(int index) const {
+    return careTypes[index].careType;
+}
+
+int BillingSummary::getCareTypePatientCount(int index) const {
+    return careTypes[index].count;
+}
+
+double BillingSummary::getCareTypeTotalCost(int index) const {
+    return careTypes[index].totalCost;
 }
