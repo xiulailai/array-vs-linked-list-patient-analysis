@@ -1,37 +1,37 @@
 Facility,Algorithm,SortKey,Comparisons,Swaps,AvgTimeMs,AuxBytes
-Facility A,Bubble Sort,Age,19710,9190,16.4040,0
-Facility A,Bubble Sort,Length of Stay,19690,9402,14.4301,0
-Facility A,Bubble Sort,Total Cost,19864,9604,14.6292,0
-Facility A,Quick Sort,Age,1720,391,0.6073,768
-Facility A,Quick Sort,Length of Stay,1905,418,0.6388,896
-Facility A,Quick Sort,Total Cost,1811,418,0.6652,896
-Facility A,Radix Sort,Age,0,400,0.3324,22440
-Facility A,Radix Sort,Length of Stay,0,600,0.4073,22440
-Facility A,Radix Sort,Total Cost,0,1400,0.6981,22440
-Facility A,Merge Sort,Age,1311,1544,0.6915,22400
-Facility A,Merge Sort,Length of Stay,1316,1544,0.7069,22400
-Facility A,Merge Sort,Total Cost,1319,1544,0.7042,22400
-Facility B,Bubble Sort,Age,19039,7772,11.8802,0
-Facility B,Bubble Sort,Length of Stay,17125,7354,11.1383,0
-Facility B,Bubble Sort,Total Cost,19549,9227,13.8122,0
-Facility B,Quick Sort,Age,1659,491,0.7349,704
-Facility B,Quick Sort,Length of Stay,1526,515,0.7869,704
-Facility B,Quick Sort,Total Cost,1744,460,0.7222,768
-Facility B,Radix Sort,Age,0,400,0.3421,22440
-Facility B,Radix Sort,Length of Stay,0,200,0.2588,22440
-Facility B,Radix Sort,Total Cost,0,1200,0.6218,22440
-Facility B,Merge Sort,Age,1291,1544,0.7218,22400
-Facility B,Merge Sort,Length of Stay,1305,1544,0.7002,22400
-Facility B,Merge Sort,Total Cost,1309,1544,0.7015,22400
-Facility C,Bubble Sort,Age,19690,9509,14.4337,0
-Facility C,Bubble Sort,Length of Stay,16819,7588,11.5115,0
-Facility C,Bubble Sort,Total Cost,19549,9343,14.2103,0
-Facility C,Quick Sort,Age,1837,403,0.6498,896
-Facility C,Quick Sort,Length of Stay,1731,533,0.8377,768
-Facility C,Quick Sort,Total Cost,1824,445,0.7171,896
-Facility C,Radix Sort,Age,0,400,0.3468,22440
-Facility C,Radix Sort,Length of Stay,0,400,0.3222,22440
-Facility C,Radix Sort,Total Cost,0,1400,0.6858,22440
-Facility C,Merge Sort,Age,1310,1544,0.6808,22400
-Facility C,Merge Sort,Length of Stay,1308,1544,0.6773,22400
-Facility C,Merge Sort,Total Cost,1308,1544,0.6791,22400
+Facility A,Bubble Sort,Age,19710,9190,42.4346,0
+Facility A,Bubble Sort,Length of Stay,19690,9402,37.6675,0
+Facility A,Bubble Sort,Total Cost,19864,9604,38.4736,0
+Facility A,Quick Sort,Age,1720,391,1.5539,768
+Facility A,Quick Sort,Length of Stay,1905,418,1.6667,896
+Facility A,Quick Sort,Total Cost,1811,418,1.6828,896
+Facility A,Radix Sort,Age,0,400,0.9427,16040
+Facility A,Radix Sort,Length of Stay,0,600,1.1597,16040
+Facility A,Radix Sort,Total Cost,0,1400,2.1502,16040
+Facility A,Merge Sort,Age,1311,1544,2.1834,16000
+Facility A,Merge Sort,Length of Stay,1316,1544,2.1819,16000
+Facility A,Merge Sort,Total Cost,1319,1544,2.2065,16000
+Facility B,Bubble Sort,Age,19039,7772,31.0736,0
+Facility B,Bubble Sort,Length of Stay,17125,7354,29.3081,0
+Facility B,Bubble Sort,Total Cost,19549,9227,36.7917,0
+Facility B,Quick Sort,Age,1659,491,1.9999,704
+Facility B,Quick Sort,Length of Stay,1526,515,2.0276,704
+Facility B,Quick Sort,Total Cost,1744,460,1.8366,768
+Facility B,Radix Sort,Age,0,400,0.9324,16040
+Facility B,Radix Sort,Length of Stay,0,200,0.7427,16040
+Facility B,Radix Sort,Total Cost,0,1200,1.9407,16040
+Facility B,Merge Sort,Age,1291,1544,2.1881,16000
+Facility B,Merge Sort,Length of Stay,1305,1544,2.2110,16000
+Facility B,Merge Sort,Total Cost,1309,1544,2.1890,16000
+Facility C,Bubble Sort,Age,19690,9509,37.9663,0
+Facility C,Bubble Sort,Length of Stay,16819,7588,30.5573,0
+Facility C,Bubble Sort,Total Cost,19549,9343,37.2948,0
+Facility C,Quick Sort,Age,1837,403,1.6430,896
+Facility C,Quick Sort,Length of Stay,1731,533,2.1015,768
+Facility C,Quick Sort,Total Cost,1824,445,1.7937,896
+Facility C,Radix Sort,Age,0,400,0.9537,16040
+Facility C,Radix Sort,Length of Stay,0,400,0.9491,16040
+Facility C,Radix Sort,Total Cost,0,1400,2.1381,16040
+Facility C,Merge Sort,Age,1310,1544,2.2206,16000
+Facility C,Merge Sort,Length of Stay,1308,1544,2.1848,16000
+Facility C,Merge Sort,Total Cost,1308,1544,2.2014,16000

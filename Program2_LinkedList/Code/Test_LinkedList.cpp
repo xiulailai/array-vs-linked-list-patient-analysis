@@ -146,17 +146,17 @@ int main() {
     cout << " (Total Cost RM per Age Group, per Facility)\n";
     cout << "==================================================\n";
 
-    cout << left << setw(40) << "Age Group";
+    cout << left << setw(46) << "Age Group";
     for (int d = 0; d < NUM_DATASETS; d++)
         cout << setw(16) << shortLabels[d];
     cout << endl;
-    cout << string(40 + 16 * NUM_DATASETS, '-') << endl;
+    cout << string(46 + 16 * NUM_DATASETS, '-') << endl;
 
     cout << fixed << setprecision(2);
     for (int g = 0; g < numGroups; g++) {
         string label = ageAnalyzers[0].getGroupLabel(g) + " ("
             + ageAnalyzers[0].getGroupDescription(g) + ")";
-        cout << left << setw(40) << label;
+        cout << left << setw(46) << label;
         for (int d = 0; d < NUM_DATASETS; d++)
             cout << setw(16) << ageAnalyzers[d].getGroupTotalCost(g);
         cout << endl;
@@ -168,16 +168,16 @@ int main() {
     cout << " (Average Length of Stay in hours, per Age Group, per Facility)\n";
     cout << "==================================================\n";
 
-    cout << left << setw(40) << "Age Group";
+    cout << left << setw(46) << "Age Group";
     for (int d = 0; d < NUM_DATASETS; d++)
         cout << setw(16) << shortLabels[d];
     cout << endl;
-    cout << string(40 + 16 * NUM_DATASETS, '-') << endl;
+    cout << string(46 + 16 * NUM_DATASETS, '-') << endl;
 
     for (int g = 0; g < numGroups; g++) {
         string label = ageAnalyzers[0].getGroupLabel(g) + " ("
             + ageAnalyzers[0].getGroupDescription(g) + ")";
-        cout << left << setw(40) << label;
+        cout << left << setw(46) << label;
         for (int d = 0; d < NUM_DATASETS; d++)
             cout << setw(16) << ageAnalyzers[d].getGroupAverageLengthOfStay(g);
         cout << endl;
