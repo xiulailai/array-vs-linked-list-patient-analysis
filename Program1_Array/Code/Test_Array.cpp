@@ -48,6 +48,18 @@ static void printMatches(const Patient* matches, int count, int limit) {
     cout << "Showing " << shown << " of " << count << " matches.\n";
 }
 
+// Finds the Data folder no matter where the program is launched from
+// (Visual Studio uses the project folder as the working directory, while
+// a terminal may run from the Code folder), so no path edits are needed.
+static string findDataDir() {
+    const string candidates[] = { "../../Data/", "../Data/", "Data/", "./" };
+    for (const string& c : candidates) {
+        ifstream probe(c + "dataset1_facility_a.csv");
+        if (probe.is_open()) return c;
+    }
+    return "../../Data/"; // not found: main() reports the problem below
+}
+
 static const int NUM_DATASETS = 3;
 static const int RUNS = 100;
 
@@ -66,10 +78,11 @@ SearchResult averageSearch(F searchFn, int runs) {
 }
 
 int main() {
+    const string dataDir = findDataDir();
     string filenames[NUM_DATASETS] = {
-        "../../Data/dataset1_facility_a.csv",
-        "../../Data/dataset2_facility_b.csv",
-        "../../Data/dataset3_facility_c.csv"
+        dataDir + "dataset1_facility_a.csv",
+        dataDir + "dataset2_facility_b.csv",
+        dataDir + "dataset3_facility_c.csv"
     };
 
     string labels[NUM_DATASETS] = {
@@ -117,6 +130,15 @@ int main() {
         datasetTotalCost[d] = billing.getTotalCost();
         datasetTotalPatients[d] = billing.getTotalPatients();
         datasetAvgStay[d] = billing.getAverageLengthOfStay();
+    }
+
+    if (masters[0].getSize() + masters[1].getSize() + masters[2].getSize() == 0) {
+        cout << "\nERROR: no dataset could be loaded from \"" << dataDir << "\".\n";
+        cout << "Put dataset1_facility_a.csv, dataset2_facility_b.csv and\n";
+        cout << "dataset3_facility_c.csv in a folder named Data next to your\n";
+        cout << "project folder (or set Project > Properties > Debugging >\n";
+        cout << "Working Directory) and run again.\n";
+        return 1;
     }
 
     // ---------- Cross-Dataset Comparison Summary ----------
@@ -197,7 +219,7 @@ int main() {
     SortKey keys[3] = { SORT_BY_AGE, SORT_BY_LENGTH_OF_STAY, SORT_BY_TOTAL_COST };
     string algorithms[4] = { "Bubble Sort", "Quick Sort", "Radix Sort", "Merge Sort" };
 
-    ofstream sortResultsFile("../../Data/Array_SortResults.csv");
+    ofstream sortResultsFile(dataDir + "Array_SortResults.csv");
     sortResultsFile << "Facility,Algorithm,SortKey,Comparisons,Swaps,AvgTimeMs,AuxBytes\n";
 
     for (int d = 0; d < NUM_DATASETS; d++) {
@@ -274,7 +296,7 @@ int main() {
     const string careTypesToFind[NUM_DATASETS] = { "Emergency", "Rehabilitation", "Outpatient" };
     const int durationLimits[NUM_DATASETS] = { 24, 2, 24 };
 
-    ofstream searchResultsFile("../../Data/Array_SearchResults.csv");
+    ofstream searchResultsFile(dataDir + "Array_SearchResults.csv");
     searchResultsFile << "Facility,SearchType,Mode,Comparisons,Steps,Matches,AvgTimeMs,AuxBytes\n";
 
     for (int d = 0; d < NUM_DATASETS; d++) {
@@ -393,7 +415,7 @@ int main() {
         << endl;
     cout << string(88, '-') << endl;
 
-    ofstream memoryResultsFile("../../Data/Array_MemoryUsage.csv");
+    ofstream memoryResultsFile(dataDir + "Array_MemoryUsage.csv");
     memoryResultsFile << "Facility,Patients,MemoryBytes,BytesPerPatient\n";
 
     for (int d = 0; d < NUM_DATASETS; d++) {
