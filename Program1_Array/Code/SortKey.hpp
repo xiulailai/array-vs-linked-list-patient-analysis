@@ -1,8 +1,8 @@
 // ============================================================
 // SortKey.hpp
 // CT077-3-2-DSTR  |  Shared sorting support
-// Lets both PatientArray and PatientLinkedList sort by Age,
-// LengthOfStay, or Total Cost using the same comparison logic.
+// Lets PatientLinkedList and PatientArray sort by Age, LengthOfStay, or Total
+// Cost using the same comparison logic.
 // ============================================================
 #ifndef SORT_KEY_HPP
 #define SORT_KEY_HPP
@@ -42,11 +42,14 @@ inline string sortKeyLabel(SortKey key) {
     }
 }
 
-// Results returned by a sort operation, used to build performance tables
+// Results returned by a sort operation, used to build performance tables.
+// auxBytes = estimated EXTRA memory the algorithm needed while running
+// (recursion stack, bucket pointers, ...), separate from the list itself.
 struct SortResult {
     long long comparisons;
     long long swaps;
     double timeMs;
+    long long auxBytes;
 };
 
 #endif

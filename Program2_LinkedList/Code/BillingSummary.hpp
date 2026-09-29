@@ -1,15 +1,14 @@
 // ============================================================
 // BillingSummary.hpp
-// CT077-3-2-DSTR  |  Dataset-Level Billing Summary
-// Computes total billing and CareType breakdown across an
-// ENTIRE dataset (not scoped to an age group). Works off a
-// plain Patient array, same pattern as AgeGroupAnalyzer, so it
-// is reusable unchanged by both the array and linked-list programs.
+// CT077-3-2-DSTR  |  Dataset-Level Billing Summary (Linked List version)
+// Computes total billing and CareType breakdown across an ENTIRE
+// dataset by walking the linked list directly (no array copy).
 // ============================================================
 #ifndef BILLING_SUMMARY_HPP
 #define BILLING_SUMMARY_HPP
 
 #include "Patient.hpp"
+#include "Node.hpp"
 #include <string>
 using namespace std;
 
@@ -31,17 +30,17 @@ private:
     int totalLengthOfStay; // running sum, used to compute average stay
 
     int findOrAddCareType(const string& careType);
+    void addRecord(const Patient& p);
 
 public:
     BillingSummary();
 
-    // Scans a plain array of patients and accumulates dataset-wide totals.
-    void analyze(const Patient* data, int count);
+    // Walks the linked list from 'head' and accumulates dataset-wide totals.
+    void analyze(const Node* head);
 
     // Prints the dataset billing report as a formatted console table.
     void printReport(const string& datasetLabel) const;
 
-    // Accessors used to build the cross-dataset comparison table
     double getTotalCost() const;
     int getTotalPatients() const;
     double getAverageLengthOfStay() const;

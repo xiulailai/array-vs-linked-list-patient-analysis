@@ -1,13 +1,17 @@
 // ============================================================
-// Test_Array.cpp
+// Test_LinkedList.cpp
 // CT077-3-2-DSTR  |  Program 1: ARRAY Implementation
 // Entry point / test driver only - all logic lives in
 // PatientArray, AgeGroupAnalyzer, and BillingSummary.
 //
 // Sections covered:
 //   4/5) Age-group + billing analysis, cross-dataset/age-group comparisons
-//   6)   Sorting performance: Tier 1 (Array vs Array, across sort keys)
-//   7)   Searching performance: Tier 1 (Array vs Array, unsorted vs sorted)
+//   6)   Sorting performance (Bubble / Quick / Radix, across sort keys)
+//   7)   Searching performance (unsorted vs sorted)
+//   8)   Memory footprint
+//   9)   Clinical insights (network-wide + facility x age-group table)
+// Timings are the AVERAGE of RUNS repetitions, because a single run on
+// 200 records takes only microseconds and is dominated by noise.
 // ============================================================
 #include "PatientArray.hpp"
 #include "AgeGroupAnalyzer.hpp"
@@ -20,7 +24,7 @@
 using namespace std;
 
 // Small helper to preview a plain array of search-result matches
-void printMatches(const Patient* matches, int count, int limit) {
+static void printMatches(const Patient* matches, int count, int limit) {
     int shown = (limit == -1 || limit > count) ? count : limit;
     cout << left
         << setw(12) << "PatientID"
@@ -44,9 +48,24 @@ void printMatches(const Patient* matches, int count, int limit) {
     cout << "Showing " << shown << " of " << count << " matches.\n";
 }
 
-int main() {
-    const int NUM_DATASETS = 3;
+static const int NUM_DATASETS = 3;
+static const int RUNS = 100;
 
+// Runs a search RUNS times; returns the last result with timeMs replaced
+// by the average. (Comparisons / steps / matches are identical every run.)
+template <typename F>
+SearchResult averageSearch(F searchFn, int runs) {
+    SearchResult last = { 0, 0, 0, 0.0, 0 };
+    double totalMs = 0.0;
+    for (int i = 0; i < runs; i++) {
+        last = searchFn();
+        totalMs += last.timeMs;
+    }
+    last.timeMs = totalMs / runs;
+    return last;
+}
+
+int main() {
     string filenames[NUM_DATASETS] = {
         "../../Data/dataset1_facility_a.csv",
         "../../Data/dataset2_facility_b.csv",
@@ -61,46 +80,43 @@ int main() {
 
     string shortLabels[NUM_DATASETS] = { "Facility A", "Facility B", "Facility C" };
 
-    // Store results per dataset for the final comparison tables
+    PatientArray masters[NUM_DATASETS]; // one loaded list per facility
+    AgeGroupAnalyzer ageAnalyzers[NUM_DATASETS];
+
     double datasetTotalCost[NUM_DATASETS];
     int datasetTotalPatients[NUM_DATASETS];
     double datasetAvgStay[NUM_DATASETS];
 
-    AgeGroupAnalyzer ageAnalyzers[NUM_DATASETS];
-
+    // ==================================================================
+    // SECTIONS 4 & 5: AGE GROUP + BILLING ANALYSIS
+    // ==================================================================
     for (int d = 0; d < NUM_DATASETS; d++) {
         cout << "\n==================================================\n";
         cout << " PROCESSING: " << labels[d] << "\n";
         cout << "==================================================\n";
 
-        PatientArray facility;
+        datasetTotalCost[d] = 0.0;
+        datasetTotalPatients[d] = 0;
+        datasetAvgStay[d] = 0.0;
 
-        if (!facility.loadFromCSV(filenames[d])) {
+        if (!masters[d].loadFromCSV(filenames[d])) {
             cout << "Skipping " << labels[d] << " due to load error.\n";
-            datasetTotalCost[d] = 0.0;
-            datasetTotalPatients[d] = 0;
-            datasetAvgStay[d] = 0.0;
             continue;
         }
 
-        cout << "Loaded " << facility.getSize() << " patient records.\n";
+        cout << "Loaded " << masters[d].getSize() << " patient records.\n";
 
-        int patientCount;
-        Patient* allPatients = facility.toArray(patientCount);
-
-        ageAnalyzers[d].analyze(allPatients, patientCount);
+        ageAnalyzers[d].analyze(masters[d].getData(), masters[d].getSize());
         cout << "\n--- Age Group & Cost Analysis ---\n";
         ageAnalyzers[d].printReport();
 
         BillingSummary billing;
-        billing.analyze(allPatients, patientCount);
+        billing.analyze(masters[d].getData(), masters[d].getSize());
         billing.printReport(labels[d]);
 
         datasetTotalCost[d] = billing.getTotalCost();
         datasetTotalPatients[d] = billing.getTotalPatients();
         datasetAvgStay[d] = billing.getAverageLengthOfStay();
-
-        delete[] allPatients;
     }
 
     // ---------- Cross-Dataset Comparison Summary ----------
@@ -110,45 +126,46 @@ int main() {
     cout << left
         << setw(40) << "Facility"
         << setw(12) << "Patients"
-        << setw(16) << "Total Cost"
+        << setw(18) << "Total Cost (RM)"
         << setw(16) << "Avg Stay(hrs)"
         << endl;
-    cout << string(84, '-') << endl;
+    cout << string(86, '-') << endl;
 
     cout << fixed << setprecision(2);
     for (int d = 0; d < NUM_DATASETS; d++) {
         cout << left
             << setw(40) << labels[d]
             << setw(12) << datasetTotalPatients[d]
-            << setw(16) << datasetTotalCost[d]
+            << setw(18) << datasetTotalCost[d]
             << setw(16) << datasetAvgStay[d]
             << endl;
     }
 
     int numGroups = AgeGroupAnalyzer::getGroupCount();
 
-    // ---------- Age Group Expenditure Comparison Across Facilities ----------
+    // ---------- Age Group Expenditure Comparison ----------
     cout << "\n\n==================================================\n";
     cout << " AGE GROUP EXPENDITURE COMPARISON ACROSS FACILITIES\n";
-    cout << " (Total Cost $ per Age Group, per Facility)\n";
+    cout << " (Total Cost RM per Age Group, per Facility)\n";
     cout << "==================================================\n";
 
     cout << left << setw(40) << "Age Group";
     for (int d = 0; d < NUM_DATASETS; d++)
-        cout << setw(14) << shortLabels[d];
+        cout << setw(16) << shortLabels[d];
     cout << endl;
-    cout << string(40 + 14 * NUM_DATASETS, '-') << endl;
+    cout << string(40 + 16 * NUM_DATASETS, '-') << endl;
 
+    cout << fixed << setprecision(2);
     for (int g = 0; g < numGroups; g++) {
         string label = ageAnalyzers[0].getGroupLabel(g) + " ("
             + ageAnalyzers[0].getGroupDescription(g) + ")";
         cout << left << setw(40) << label;
         for (int d = 0; d < NUM_DATASETS; d++)
-            cout << setw(14) << ageAnalyzers[d].getGroupTotalCost(g);
+            cout << setw(16) << ageAnalyzers[d].getGroupTotalCost(g);
         cout << endl;
     }
 
-    // ---------- Age Group Visit Duration Comparison Across Facilities ----------
+    // ---------- Age Group Visit Duration Comparison ----------
     cout << "\n\n==================================================\n";
     cout << " AGE GROUP VISIT DURATION COMPARISON ACROSS FACILITIES\n";
     cout << " (Average Length of Stay in hours, per Age Group, per Facility)\n";
@@ -156,182 +173,210 @@ int main() {
 
     cout << left << setw(40) << "Age Group";
     for (int d = 0; d < NUM_DATASETS; d++)
-        cout << setw(14) << shortLabels[d];
+        cout << setw(16) << shortLabels[d];
     cout << endl;
-    cout << string(40 + 14 * NUM_DATASETS, '-') << endl;
+    cout << string(40 + 16 * NUM_DATASETS, '-') << endl;
 
     for (int g = 0; g < numGroups; g++) {
         string label = ageAnalyzers[0].getGroupLabel(g) + " ("
             + ageAnalyzers[0].getGroupDescription(g) + ")";
         cout << left << setw(40) << label;
         for (int d = 0; d < NUM_DATASETS; d++)
-            cout << setw(14) << ageAnalyzers[d].getGroupAverageLengthOfStay(g);
+            cout << setw(16) << ageAnalyzers[d].getGroupAverageLengthOfStay(g);
         cout << endl;
     }
 
     // ==================================================================
     // SECTION 6: SORTING PERFORMANCE ANALYSIS
-    // Tier 1 - Array vs Array: same structure, compared across sort keys
     // ==================================================================
     cout << "\n\n==================================================\n";
     cout << " SORTING PERFORMANCE ANALYSIS - ARRAY\n";
-    cout << " Tier 1: comparing sort keys WITHIN the array structure\n";
+    cout << " (time = average of " << RUNS << " runs; Swaps for Radix/Merge = element moves)\n";
     cout << "==================================================\n";
 
     SortKey keys[3] = { SORT_BY_AGE, SORT_BY_LENGTH_OF_STAY, SORT_BY_TOTAL_COST };
+    string algorithms[4] = { "Bubble Sort", "Quick Sort", "Radix Sort", "Merge Sort" };
 
     ofstream sortResultsFile("../../Data/Array_SortResults.csv");
-    sortResultsFile << "Facility,Algorithm,SortKey,Comparisons,Swaps,TimeMs\n";
+    sortResultsFile << "Facility,Algorithm,SortKey,Comparisons,Swaps,AvgTimeMs,AuxBytes\n";
 
     for (int d = 0; d < NUM_DATASETS; d++) {
         cout << "\n--- " << labels[d] << " ---\n";
         cout << left
-            << setw(18) << "Algorithm"
-            << setw(20) << "Sort Key"
-            << setw(16) << "Comparisons"
-            << setw(12) << "Swaps"
-            << setw(14) << "Time (ms)"
+            << setw(16) << "Algorithm"
+            << setw(18) << "Sort Key"
+            << setw(14) << "Comparisons"
+            << setw(10) << "Swaps"
+            << setw(16) << "Avg Time (ms)"
+            << setw(14) << "Aux Mem (B)"
             << endl;
-        cout << string(80, '-') << endl;
+        cout << string(88, '-') << endl;
 
-        for (int a = 0; a < 3; a++) for (int k = 0; k < 3; k++) {
-            PatientArray facility;
-            facility.loadFromCSV(filenames[d]);
+        for (int a = 0; a < 4; a++) {
+            for (int k = 0; k < 3; k++) {
+                SortResult last = { 0, 0, 0.0, 0 };
+                double totalMs = 0.0;
 
-            SortResult result;
-            if (a == 0) result = facility.bubbleSort(keys[k]);
-            else if (a == 1) result = facility.quickSort(keys[k]);
-            else result = facility.radixSort(keys[k]);
-            string algorithm = (a == 0) ? "Bubble Sort" : (a == 1) ? "Quick Sort" : "Radix Sort";
+                for (int run = 0; run < RUNS; run++) {
+                    PatientArray work;
+                    work.append(masters[d]); // fresh unsorted copy (not timed)
 
-            cout << left
-                << setw(18) << algorithm
-                << setw(20) << sortKeyLabel(keys[k])
-                << setw(16) << result.comparisons
-                << setw(12) << result.swaps
-                << setw(14) << fixed << setprecision(4) << result.timeMs
-                << endl;
+                    SortResult r;
+                    if (a == 0) r = work.bubbleSort(keys[k]);
+                    else if (a == 1) r = work.quickSort(keys[k]);
+                    else if (a == 2) r = work.radixSort(keys[k]);
+                    else r = work.mergeSort(keys[k]);
 
-            if (sortResultsFile.is_open()) {
-                sortResultsFile << shortLabels[d] << "," << algorithm << ","
+                    totalMs += r.timeMs;
+                    last = r;
+                }
+                double avgMs = totalMs / RUNS;
+
+                cout << left
+                    << setw(16) << algorithms[a]
+                    << setw(18) << sortKeyLabel(keys[k])
+                    << setw(14) << last.comparisons
+                    << setw(10) << last.swaps
+                    << setw(16) << fixed << setprecision(4) << avgMs
+                    << setw(14) << last.auxBytes
+                    << endl;
+
+                sortResultsFile << shortLabels[d] << "," << algorithms[a] << ","
                     << sortKeyLabel(keys[k]) << ","
-                    << result.comparisons << ","
-                    << result.swaps << ","
-                    << fixed << setprecision(4) << result.timeMs << "\n";
+                    << last.comparisons << "," << last.swaps << ","
+                    << fixed << setprecision(4) << avgMs << ","
+                    << last.auxBytes << "\n";
             }
         }
     }
     sortResultsFile.close();
 
     cout << "\n--- Correctness Check: Facility A sorted by Age (first 5 rows) ---\n";
-    PatientArray sortCheckFacility;
-    sortCheckFacility.loadFromCSV(filenames[0]);
-    sortCheckFacility.bubbleSort(SORT_BY_AGE);
-    sortCheckFacility.printAll(5);
+    {
+        PatientArray check;
+        check.append(masters[0]);
+        check.bubbleSort(SORT_BY_AGE);
+        check.printAll(5);
+    }
 
     // ==================================================================
     // SECTION 7: SEARCHING PERFORMANCE ANALYSIS
-    // Tier 1 - Array vs Array: unsorted vs sorted search performance
     // ==================================================================
     cout << "\n\n==================================================\n";
     cout << " SEARCHING PERFORMANCE ANALYSIS - ARRAY\n";
-    cout << " Tier 1: unsorted vs sorted search, within the array structure\n";
+    cout << " (time = average of " << RUNS << " runs; Steps = elements examined/copied)\n";
     cout << "==================================================\n";
 
-    const int AGE_MIN = 61, AGE_MAX = 100;
-    const string SEARCH_CARE_TYPE = "Emergency";
-    const int DURATION_THRESHOLD = 24;
+    // Search criteria are chosen PER FACILITY so every search returns real
+    // matches (Facility B has only young adults, short stays, no seniors).
+    const int ageMins[NUM_DATASETS] = { 61, 18, 61 };
+    const int ageMaxs[NUM_DATASETS] = { 100, 25, 100 };
+    const string careTypesToFind[NUM_DATASETS] = { "Emergency", "Rehabilitation", "Outpatient" };
+    const int durationLimits[NUM_DATASETS] = { 24, 2, 24 };
 
     ofstream searchResultsFile("../../Data/Array_SearchResults.csv");
-    searchResultsFile << "Facility,SearchType,Mode,Comparisons,Matches,TimeMs\n";
+    searchResultsFile << "Facility,SearchType,Mode,Comparisons,Steps,Matches,AvgTimeMs,AuxBytes\n";
 
     for (int d = 0; d < NUM_DATASETS; d++) {
+        const PatientArray& master = masters[d];
+        const int AGE_MIN = ageMins[d], AGE_MAX = ageMaxs[d];
+        const string SEARCH_CARE_TYPE = careTypesToFind[d];
+        const int DURATION_THRESHOLD = durationLimits[d];
+        const string ageLabel = "Age Range (" + to_string(AGE_MIN) + "-" + to_string(AGE_MAX) + ")";
+        const string careLabel = "CareType=" + SEARCH_CARE_TYPE;
+        const string durLabel = "Duration > " + to_string(DURATION_THRESHOLD) + "h";
+
+        // Pre-sorted copies are built once, outside the timed searches.
+        PatientArray sortedByAge;
+        sortedByAge.append(master);
+        sortedByAge.radixSort(SORT_BY_AGE);
+
+        PatientArray sortedByStay;
+        sortedByStay.append(master);
+        sortedByStay.radixSort(SORT_BY_LENGTH_OF_STAY);
+
         cout << "\n--- " << labels[d] << " ---\n";
         cout << left
-            << setw(24) << "Search Type"
+            << setw(26) << "Search Type"
             << setw(10) << "Mode"
-            << setw(14) << "Comparisons"
-            << setw(10) << "Matches"
-            << setw(12) << "Time (ms)"
+            << setw(13) << "Comparisons"
+            << setw(8) << "Steps"
+            << setw(9) << "Matches"
+            << setw(16) << "Avg Time (ms)"
+            << setw(12) << "Aux Mem (B)"
             << endl;
-        cout << string(70, '-') << endl;
+        cout << string(94, '-') << endl;
 
-        // Local helper: prints one row and logs it to the CSV, reused
-        // for every search test below so the code isn't repeated 5 times.
         auto logSearch = [&](const string& displayLabel, const string& csvLabel,
             const string& mode, const SearchResult& r) {
-                cout << left << setw(24) << displayLabel << setw(10) << mode
-                    << setw(14) << r.comparisons << setw(10) << r.matchCount
-                    << setw(12) << fixed << setprecision(4) << r.timeMs
+                cout << left << setw(26) << displayLabel << setw(10) << mode
+                    << setw(13) << r.comparisons << setw(8) << r.steps
+                    << setw(9) << r.matchCount
+                    << setw(16) << fixed << setprecision(4) << r.timeMs
+                    << setw(12) << r.auxBytes
                     << endl;
                 searchResultsFile << shortLabels[d] << "," << csvLabel << "," << mode << ","
-                    << r.comparisons << "," << r.matchCount << ","
-                    << fixed << setprecision(4) << r.timeMs << "\n";
+                    << r.comparisons << "," << r.steps << "," << r.matchCount << ","
+                    << fixed << setprecision(4) << r.timeMs << "," << r.auxBytes << "\n";
             };
 
-        // ---- Age Range Search: Unsorted ----
-        {
-            PatientArray facility;
-            facility.loadFromCSV(filenames[d]);
-            Patient* matches; int matchCount;
-            SearchResult r = facility.searchByAgeRangeUnsorted(AGE_MIN, AGE_MAX, matches, matchCount);
-            logSearch("Age Range (61-100)", "AgeRange", "Unsorted", r);
-            delete[] matches;
-        }
+        SearchResult r;
 
-        // ---- Age Range Search: Sorted (binary search boundary) ----
-        {
-            PatientArray facility;
-            facility.loadFromCSV(filenames[d]);
-            facility.bubbleSort(SORT_BY_AGE); // must sort by Age first
-            Patient* matches; int matchCount;
-            SearchResult r = facility.searchByAgeRangeSorted(AGE_MIN, AGE_MAX, matches, matchCount);
-            logSearch("Age Range (61-100)", "AgeRange", "Sorted", r);
-            delete[] matches;
-        }
+        r = averageSearch([&]() -> SearchResult {
+            Patient* m; int c;
+            SearchResult x = master.searchByAgeRangeUnsorted(AGE_MIN, AGE_MAX, m, c);
+            delete[] m;
+            return x;
+            }, RUNS);
+        logSearch(ageLabel, "AgeRange", "Unsorted", r);
 
-        // ---- Care Type Search (always linear - categorical field) ----
-        {
-            PatientArray facility;
-            facility.loadFromCSV(filenames[d]);
-            Patient* matches; int matchCount;
-            SearchResult r = facility.searchByCareType(SEARCH_CARE_TYPE, matches, matchCount);
-            logSearch("CareType=Emergency", "CareType", "Linear", r);
-            delete[] matches;
-        }
+        r = averageSearch([&]() -> SearchResult {
+            Patient* m; int c;
+            SearchResult x = sortedByAge.searchByAgeRangeSorted(AGE_MIN, AGE_MAX, m, c);
+            delete[] m;
+            return x;
+            }, RUNS);
+        logSearch(ageLabel, "AgeRange", "Sorted", r);
 
-        // ---- Duration Threshold Search: Unsorted ----
-        {
-            PatientArray facility;
-            facility.loadFromCSV(filenames[d]);
-            Patient* matches; int matchCount;
-            SearchResult r = facility.searchByDurationThresholdUnsorted(DURATION_THRESHOLD, matches, matchCount);
-            logSearch("Duration > 24h", "Duration", "Unsorted", r);
-            delete[] matches;
-        }
+        r = averageSearch([&]() -> SearchResult {
+            Patient* m; int c;
+            SearchResult x = master.searchByCareType(SEARCH_CARE_TYPE, m, c);
+            delete[] m;
+            return x;
+            }, RUNS);
+        logSearch(careLabel, "CareType", "Linear", r);
 
-        // ---- Duration Threshold Search: Sorted (binary search boundary) ----
-        {
-            PatientArray facility;
-            facility.loadFromCSV(filenames[d]);
-            facility.bubbleSort(SORT_BY_LENGTH_OF_STAY);
-            Patient* matches; int matchCount;
-            SearchResult r = facility.searchByDurationThresholdSorted(DURATION_THRESHOLD, matches, matchCount);
-            logSearch("Duration > 24h", "Duration", "Sorted", r);
-            delete[] matches;
-        }
+        r = averageSearch([&]() -> SearchResult {
+            Patient* m; int c;
+            SearchResult x = master.searchByDurationThresholdUnsorted(DURATION_THRESHOLD, m, c);
+            delete[] m;
+            return x;
+            }, RUNS);
+        logSearch(durLabel, "Duration", "Unsorted", r);
+
+        r = averageSearch([&]() -> SearchResult {
+            Patient* m; int c;
+            SearchResult x = sortedByStay.searchByDurationThresholdSorted(DURATION_THRESHOLD, m, c);
+            delete[] m;
+            return x;
+            }, RUNS);
+        logSearch(durLabel, "Duration", "Sorted", r);
     }
     searchResultsFile.close();
 
-    // Correctness check: preview actual matches for one search
+    cout << "\n(Criteria differ per facility so each search has matches: A = seniors/Emergency/>24h,\n";
+    cout << " B = ages 18-25/Rehabilitation/>2h, C = seniors/Outpatient/>24h.)\n";
+
     cout << "\n--- Correctness Check: Facility A, Age Range 61-100 (Sorted search) ---\n";
-    PatientArray searchCheckFacility;
-    searchCheckFacility.loadFromCSV(filenames[0]);
-    searchCheckFacility.bubbleSort(SORT_BY_AGE);
-    Patient* checkMatches; int checkMatchCount;
-    searchCheckFacility.searchByAgeRangeSorted(AGE_MIN, AGE_MAX, checkMatches, checkMatchCount);
-    printMatches(checkMatches, checkMatchCount, 5);
-    delete[] checkMatches;
+    {
+        PatientArray sortedCheck;
+        sortedCheck.append(masters[0]);
+        sortedCheck.radixSort(SORT_BY_AGE);
+        Patient* matches; int matchCount;
+        sortedCheck.searchByAgeRangeSorted(ageMins[0], ageMaxs[0], matches, matchCount);
+        printMatches(matches, matchCount, 5);
+        delete[] matches;
+    }
 
     // ==================================================================
     // SECTION 8: PERFORMANCE ANALYSIS - MEMORY FOOTPRINT
@@ -352,11 +397,8 @@ int main() {
     memoryResultsFile << "Facility,Patients,MemoryBytes,BytesPerPatient\n";
 
     for (int d = 0; d < NUM_DATASETS; d++) {
-        PatientArray facility;
-        facility.loadFromCSV(filenames[d]);
-
-        long long memBytes = facility.getMemoryUsageBytes();
-        int patients = facility.getSize();
+        long long memBytes = masters[d].getMemoryUsageBytes();
+        int patients = masters[d].getSize();
         double bytesPerPatient = (patients > 0) ? (double)memBytes / patients : 0.0;
 
         cout << left
@@ -372,44 +414,44 @@ int main() {
     memoryResultsFile.close();
 
     cout << "\nNote: memory shown uses ALLOCATED CAPACITY, not just used size -\n";
-    cout << "this includes any unused slots left over from the array's doubling\n";
+    cout << "this includes unused slots left over from the array's doubling\n";
     cout << "resize strategy (see PatientArray::getMemoryUsageBytes comments).\n";
 
     // ==================================================================
-    // SECTION 9: CLINICAL INSIGHTS - METROHEALTH SYSTEM-WIDE SUMMARY
-    // Combines all 3 facilities into one network-wide view to directly
-    // answer: "which demographic group generates the highest billing"
-    // and "which CareType has the highest patient traffic" (assignment
-    // brief, Section 9). The rest of Section 9 (recommendations) is
-    // written up in the Word documentation using these numbers.
+    // SECTION 9: CLINICAL INSIGHTS
     // ==================================================================
+    cout << "\n\n==================================================\n";
+    cout << " CLINICAL INSIGHTS - SERVICE PREFERENCE & COST BY AGE GROUP\n";
+    cout << " (Most requested care type and average cost per patient, RM)\n";
+    cout << "==================================================\n";
+
+    cout << left << setw(30) << "Age Group";
+    for (int d = 0; d < NUM_DATASETS; d++)
+        cout << setw(22) << (shortLabels[d] + " top care") << setw(12) << "Avg RM";
+    cout << endl;
+    cout << string(30 + 34 * NUM_DATASETS, '-') << endl;
+
+    cout << fixed << setprecision(2);
+    for (int g = 0; g < numGroups; g++) {
+        cout << left << setw(30) << ageAnalyzers[0].getGroupLabel(g);
+        for (int d = 0; d < NUM_DATASETS; d++)
+            cout << setw(22) << ageAnalyzers[d].getMostRequestedCareTypeLabel(g)
+            << setw(12) << ageAnalyzers[d].getGroupAverageCost(g);
+        cout << endl;
+    }
+
     cout << "\n\n==================================================\n";
     cout << " CLINICAL INSIGHTS - METROHEALTH SYSTEM-WIDE SUMMARY\n";
     cout << "==================================================\n";
 
-    // Reload and combine all 3 facilities into one array
-    PatientArray combinedFacilities[NUM_DATASETS];
-    int totalCombinedCount = 0;
-    for (int d = 0; d < NUM_DATASETS; d++) {
-        combinedFacilities[d].loadFromCSV(filenames[d]);
-        totalCombinedCount += combinedFacilities[d].getSize();
-    }
+    PatientArray combined; // all three facilities in ONE linked list
+    for (int d = 0; d < NUM_DATASETS; d++)
+        combined.append(masters[d]);
 
-    Patient* combinedPatients = new Patient[totalCombinedCount > 0 ? totalCombinedCount : 1];
-    int insertPos = 0;
-    for (int d = 0; d < NUM_DATASETS; d++) {
-        int countD;
-        Patient* arrD = combinedFacilities[d].toArray(countD);
-        for (int i = 0; i < countD; i++)
-            combinedPatients[insertPos++] = arrD[i];
-        delete[] arrD;
-    }
+    cout << "\nTotal patients across MetroHealth System: " << combined.getSize() << "\n";
 
-    cout << "\nTotal patients across MetroHealth System: " << totalCombinedCount << "\n";
-
-    // ---- Highest-billing age group, network-wide ----
     AgeGroupAnalyzer networkAgeAnalyzer;
-    networkAgeAnalyzer.analyze(combinedPatients, totalCombinedCount);
+    networkAgeAnalyzer.analyze(combined.getData(), combined.getSize());
 
     int highestBillingGroup = 0;
     for (int g = 1; g < numGroups; g++) {
@@ -421,12 +463,11 @@ int main() {
     cout << "\nHighest-billing age group (network-wide): "
         << networkAgeAnalyzer.getGroupLabel(highestBillingGroup) << " ("
         << networkAgeAnalyzer.getGroupDescription(highestBillingGroup) << ")\n";
-    cout << "  -> Total Cost: $" << networkAgeAnalyzer.getGroupTotalCost(highestBillingGroup) << "\n";
+    cout << "  -> Total Cost: RM " << networkAgeAnalyzer.getGroupTotalCost(highestBillingGroup) << "\n";
     cout << "  -> Patients: " << networkAgeAnalyzer.getGroupPatientCount(highestBillingGroup) << "\n";
 
-    // ---- Highest-traffic CareType, network-wide ----
     BillingSummary networkBilling;
-    networkBilling.analyze(combinedPatients, totalCombinedCount);
+    networkBilling.analyze(combined.getData(), combined.getSize());
 
     int highestTrafficIndex = 0;
     for (int i = 1; i < networkBilling.getCareTypeCount(); i++) {
@@ -436,13 +477,11 @@ int main() {
 
     cout << "\nHighest-traffic Care Type (network-wide): "
         << networkBilling.getCareTypeLabel(highestTrafficIndex)
-        << " (" << networkBilling.getCareTypePatientCount(highestTrafficIndex) << " patients, $"
+        << " (" << networkBilling.getCareTypePatientCount(highestTrafficIndex) << " patients, RM "
         << networkBilling.getCareTypeTotalCost(highestTrafficIndex) << " total cost)\n";
 
     cout << "\n--- Full Network-Wide Billing Summary (All Facilities Combined) ---\n";
     networkBilling.printReport("MetroHealth System (All Facilities)");
-
-    delete[] combinedPatients;
 
     return 0;
 }

@@ -8,9 +8,11 @@
 #define SEARCH_RESULT_HPP
 
 struct SearchResult {
-    long long comparisons;
+    long long comparisons;  // value comparisons made against the search criterion
+    long long steps;        // nodes actually visited (pointer hops) - shows the O(n) walk
     int matchCount;
     double timeMs;
+    long long auxBytes;     // memory used to store the matching records
 };
 
 #endif

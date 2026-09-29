@@ -1,6 +1,6 @@
 // ============================================================
 // AgeGroupAnalyzer.cpp
-// CT077-3-2-DSTR  |  Age Group / Cost Analysis
+// CT077-3-2-DSTR  |  Age Group / Cost Analysis (Linked List version)
 // ============================================================
 #include "AgeGroupAnalyzer.hpp"
 #include <iostream>
@@ -72,11 +72,9 @@ void AgeGroupAnalyzer::addToGroup(int groupIndex, const Patient& p) {
     }
 }
 
-void AgeGroupAnalyzer::analyze(const Patient* data, int count) {
-    for (int i = 0; i < count; i++) {
-        int groupIndex = getGroupIndex(data[i].age);
-        addToGroup(groupIndex, data[i]);
-    }
+void AgeGroupAnalyzer::analyze(const Node* head) {
+    for (const Node* current = head; current != nullptr; current = current->next)
+        addToGroup(getGroupIndex(current->data.age), current->data);
 }
 
 int AgeGroupAnalyzer::findMostRequestedCareType(int groupIndex) const {
@@ -86,7 +84,7 @@ int AgeGroupAnalyzer::findMostRequestedCareType(int groupIndex) const {
     int maxIndex = 0;
     for (int i = 1; i < group.careTypeCount; i++) {
         if (group.careTypes[i].count > group.careTypes[maxIndex].count)
-            maxIndex = i;
+            maxIndex = i; // ties keep the first care type found
     }
     return maxIndex;
 }
@@ -112,10 +110,10 @@ void AgeGroupAnalyzer::printReport() const {
         cout << left
             << setw(18) << "Care Type"
             << setw(16) << "Patient Count"
-            << setw(16) << "Total Cost"
+            << setw(18) << "Total Cost (RM)"
             << setw(20) << "Avg Cost/Patient"
             << endl;
-        cout << string(70, '-') << endl;
+        cout << string(72, '-') << endl;
 
         cout << fixed << setprecision(2);
         for (int i = 0; i < group.careTypeCount; i++) {
@@ -125,7 +123,7 @@ void AgeGroupAnalyzer::printReport() const {
             cout << left
                 << setw(18) << ct.careType
                 << setw(16) << ct.count
-                << setw(16) << ct.totalCost
+                << setw(18) << ct.totalCost
                 << setw(20) << avgCost
                 << endl;
         }
@@ -133,34 +131,19 @@ void AgeGroupAnalyzer::printReport() const {
         double groupAvgCost = (group.patientCount > 0)
             ? (group.totalCost / group.patientCount) : 0.0;
 
-        cout << string(70, '-') << endl;
-        cout << "Total Billing for Age Group: $" << group.totalCost << endl;
-        cout << "Average Cost per Patient (Group): $" << groupAvgCost << endl;
+        cout << string(72, '-') << endl;
+        cout << "Total Billing for Age Group: RM " << group.totalCost << endl;
+        cout << "Average Cost per Patient (Group): RM " << groupAvgCost << endl;
         cout << "Total Patients in Group: " << group.patientCount << endl;
     }
 }
 
 // ---------- Accessors for cross-dataset / cross-age-group comparisons ----------
-
-int AgeGroupAnalyzer::getGroupCount() {
-    return NUM_GROUPS;
-}
-
-string AgeGroupAnalyzer::getGroupLabel(int index) const {
-    return groups[index].rangeLabel;
-}
-
-string AgeGroupAnalyzer::getGroupDescription(int index) const {
-    return groups[index].description;
-}
-
-int AgeGroupAnalyzer::getGroupPatientCount(int index) const {
-    return groups[index].patientCount;
-}
-
-double AgeGroupAnalyzer::getGroupTotalCost(int index) const {
-    return groups[index].totalCost;
-}
+int AgeGroupAnalyzer::getGroupCount() { return NUM_GROUPS; }
+string AgeGroupAnalyzer::getGroupLabel(int index) const { return groups[index].rangeLabel; }
+string AgeGroupAnalyzer::getGroupDescription(int index) const { return groups[index].description; }
+int AgeGroupAnalyzer::getGroupPatientCount(int index) const { return groups[index].patientCount; }
+double AgeGroupAnalyzer::getGroupTotalCost(int index) const { return groups[index].totalCost; }
 
 double AgeGroupAnalyzer::getGroupAverageCost(int index) const {
     return (groups[index].patientCount > 0)
@@ -170,4 +153,9 @@ double AgeGroupAnalyzer::getGroupAverageCost(int index) const {
 double AgeGroupAnalyzer::getGroupAverageLengthOfStay(int index) const {
     return (groups[index].patientCount > 0)
         ? (double)groups[index].totalLengthOfStay / groups[index].patientCount : 0.0;
+}
+
+string AgeGroupAnalyzer::getMostRequestedCareTypeLabel(int index) const {
+    int i = findMostRequestedCareType(index);
+    return (i == -1) ? "-" : groups[index].careTypes[i].careType;
 }

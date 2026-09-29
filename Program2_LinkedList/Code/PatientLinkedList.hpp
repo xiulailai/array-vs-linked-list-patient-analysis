@@ -2,6 +2,8 @@
 // PatientLinkedList.hpp
 // CT077-3-2-DSTR  |  Program 2: SINGLY LINKED LIST Implementation
 // Class declaration for the linked-list-based patient collection.
+// Everything (storage, search results, analysis input) stays in
+// linked lists - no arrays of Patient are used in this program.
 // ============================================================
 #ifndef PATIENT_LINKED_LIST_HPP
 #define PATIENT_LINKED_LIST_HPP
@@ -16,44 +18,50 @@ using namespace std;
 class PatientLinkedList {
 private:
     Node* head;
-    Node* tail;   // kept for O(1) insertAtEnd, per lecture notes
+    Node* tail;   // kept for O(1) insertAtEnd
     int size;
 
 public:
     PatientLinkedList();
     ~PatientLinkedList();
 
+    // Copying is disabled: a shallow copy would double-delete nodes.
+    // Use append() to make a deep copy of another list instead.
+    PatientLinkedList(const PatientLinkedList&) = delete;
+    PatientLinkedList& operator=(const PatientLinkedList&) = delete;
+
     void clear();
     void insertAtEnd(const Patient& p);
     int getSize() const;
+    const Node* getHead() const;                 // read-only access for analyzers
+    void append(const PatientLinkedList& other); // deep-copies other's nodes onto the end
 
     bool loadFromCSV(const string& filename);
     void printAll(int limit = -1) const;
-    Patient* toArray(int& outCount) const;
 
-    // Sorts the list in place by the given key using Bubble Sort.
+    // ---------- Sorting (Section 6) - all sort in place ----------
     SortResult bubbleSort(SortKey key);
     SortResult quickSort(SortKey key);
     SortResult radixSort(SortKey key);
+    SortResult mergeSort(SortKey key);   // relinks nodes - no data is copied
 
     // ---------- Searching (Section 7) ----------
+    // Matches are returned as a linked list (outMatches is cleared first).
     SearchResult searchByAgeRangeUnsorted(int minAge, int maxAge,
-        Patient*& outMatches, int& outMatchCount) const;
+        PatientLinkedList& outMatches) const;
     SearchResult searchByAgeRangeSorted(int minAge, int maxAge,
-        Patient*& outMatches, int& outMatchCount) const;
+        PatientLinkedList& outMatches) const;
     SearchResult searchByCareType(const string& careType,
-        Patient*& outMatches, int& outMatchCount) const;
+        PatientLinkedList& outMatches) const;
     SearchResult searchByDurationThresholdUnsorted(int minHours,
-        Patient*& outMatches, int& outMatchCount) const;
+        PatientLinkedList& outMatches) const;
     SearchResult searchByDurationThresholdSorted(int minHours,
-        Patient*& outMatches, int& outMatchCount) const;
+        PatientLinkedList& outMatches) const;
 
     // ---------- Performance Analysis (Section 8) ----------
-    // Returns an ESTIMATE of the structure's memory footprint in bytes:
-    // one Node (Patient data + a 'next' pointer) per element actually
-    // stored, plus the small fixed overhead of the class itself.
-    // Unlike the array, there is no unused-capacity waste - but every
-    // single node carries an extra pointer field the array does not need.
+    // ESTIMATE: one Node (Patient + 'next' pointer) per element, plus the
+    // class's own fixed overhead. No unused capacity, but every node pays
+    // for an extra pointer the array does not need.
     long long getMemoryUsageBytes() const;
 };
 

@@ -47,6 +47,15 @@ Patient PatientArray::getPatientAt(int index) const {
     return list[index];
 }
 
+const Patient* PatientArray::getData() const {
+    return list;
+}
+
+void PatientArray::append(const PatientArray& other) {
+    for (int i = 0; i < other.size; i++)
+        addPatient(other.list[i]);
+}
+
 bool PatientArray::loadFromCSV(const string& filename) {
     ifstream file(filename);
     if (!file.is_open()) {
@@ -112,19 +121,11 @@ void PatientArray::printAll(int limit) const {
     cout << endl << "Displayed " << count << " of " << size << " records.\n";
 }
 
-Patient* PatientArray::toArray(int& outCount) const {
-    outCount = size;
-    Patient* copy = new Patient[size];
-    for (int i = 0; i < size; i++)
-        copy[i] = list[i];
-    return copy;
-}
+// ==================== SORTING (Section 6) ====================
 
 // ---------- Bubble Sort ----------
 SortResult PatientArray::bubbleSort(SortKey key) {
-    SortResult result;
-    result.comparisons = 0;
-    result.swaps = 0;
+    SortResult result = { 0, 0, 0.0, 0 }; // needs no extra memory
 
     auto start = high_resolution_clock::now();
 
@@ -153,177 +154,11 @@ SortResult PatientArray::bubbleSort(SortKey key) {
     return result;
 }
 
-// ---------- Searching (Section 7) ----------
-
-SearchResult PatientArray::searchByAgeRangeUnsorted(int minAge, int maxAge,
-    Patient*& outMatches, int& outMatchCount) const {
-    SearchResult result;
-    result.comparisons = 0;
-    outMatchCount = 0;
-
-    outMatches = new Patient[size > 0 ? size : 1]; // worst case: all match
-
-    auto start = high_resolution_clock::now();
-
-    // Every element must be checked - matches could be anywhere.
-    for (int i = 0; i < size; i++) {
-        result.comparisons++;
-        if (list[i].age >= minAge && list[i].age <= maxAge) {
-            outMatches[outMatchCount] = list[i];
-            outMatchCount++;
-        }
-    }
-
-    auto end = high_resolution_clock::now();
-    result.timeMs = duration<double, std::milli>(end - start).count();
-    result.matchCount = outMatchCount;
-
-    return result;
-}
-
-SearchResult PatientArray::searchByAgeRangeSorted(int minAge, int maxAge,
-    Patient*& outMatches, int& outMatchCount) const {
-    SearchResult result;
-    result.comparisons = 0;
-    outMatchCount = 0;
-
-    outMatches = new Patient[size > 0 ? size : 1];
-
-    auto start = high_resolution_clock::now();
-
-    // Binary search for the FIRST index where age >= minAge.
-    // Requires the array to already be sorted ascending by Age.
-    int low = 0, high = size - 1, boundary = size; // default: no match
-    while (low <= high) {
-        int mid = (low + high) / 2;
-        result.comparisons++;
-        if (list[mid].age >= minAge) {
-            boundary = mid;
-            high = mid - 1; // keep looking left for an earlier match
-        }
-        else {
-            low = mid + 1;
-        }
-    }
-
-    // Data is sorted, so matches are contiguous from 'boundary' onward.
-    // We can stop the instant we pass maxAge - no need to scan the rest.
-    for (int i = boundary; i < size; i++) {
-        result.comparisons++;
-        if (list[i].age > maxAge)
-            break;
-        outMatches[outMatchCount] = list[i];
-        outMatchCount++;
-    }
-
-    auto end = high_resolution_clock::now();
-    result.timeMs = duration<double, std::milli>(end - start).count();
-    result.matchCount = outMatchCount;
-
-    return result;
-}
-
-SearchResult PatientArray::searchByCareType(const string& careType,
-    Patient*& outMatches, int& outMatchCount) const {
-    SearchResult result;
-    result.comparisons = 0;
-    outMatchCount = 0;
-
-    outMatches = new Patient[size > 0 ? size : 1];
-
-    auto start = high_resolution_clock::now();
-
-    // CareType has no natural numeric order, so this is always linear.
-    for (int i = 0; i < size; i++) {
-        result.comparisons++;
-        if (list[i].careType == careType) {
-            outMatches[outMatchCount] = list[i];
-            outMatchCount++;
-        }
-    }
-
-    auto end = high_resolution_clock::now();
-    result.timeMs = duration<double, std::milli>(end - start).count();
-    result.matchCount = outMatchCount;
-
-    return result;
-}
-
-SearchResult PatientArray::searchByDurationThresholdUnsorted(int minHours,
-    Patient*& outMatches, int& outMatchCount) const {
-    SearchResult result;
-    result.comparisons = 0;
-    outMatchCount = 0;
-
-    outMatches = new Patient[size > 0 ? size : 1];
-
-    auto start = high_resolution_clock::now();
-
-    for (int i = 0; i < size; i++) {
-        result.comparisons++;
-        if (list[i].lengthOfStay > minHours) {
-            outMatches[outMatchCount] = list[i];
-            outMatchCount++;
-        }
-    }
-
-    auto end = high_resolution_clock::now();
-    result.timeMs = duration<double, std::milli>(end - start).count();
-    result.matchCount = outMatchCount;
-
-    return result;
-}
-
-SearchResult PatientArray::searchByDurationThresholdSorted(int minHours,
-    Patient*& outMatches, int& outMatchCount) const {
-    SearchResult result;
-    result.comparisons = 0;
-    outMatchCount = 0;
-
-    outMatches = new Patient[size > 0 ? size : 1];
-
-    auto start = high_resolution_clock::now();
-
-    // Binary search for the FIRST index where lengthOfStay > minHours.
-    // Requires the array to already be sorted ascending by LengthOfStay.
-    int low = 0, high = size - 1, boundary = size;
-    while (low <= high) {
-        int mid = (low + high) / 2;
-        result.comparisons++;
-        if (list[mid].lengthOfStay > minHours) {
-            boundary = mid;
-            high = mid - 1;
-        }
-        else {
-            low = mid + 1;
-        }
-    }
-
-    // Everything from 'boundary' to the end automatically qualifies -
-    // no further comparisons needed thanks to the sort order.
-    for (int i = boundary; i < size; i++) {
-        outMatches[outMatchCount] = list[i];
-        outMatchCount++;
-    }
-
-    auto end = high_resolution_clock::now();
-    result.timeMs = duration<double, std::milli>(end - start).count();
-    result.matchCount = outMatchCount;
-
-    return result;
-}
-
-// ---------- Performance Analysis (Section 8) ----------
-long long PatientArray::getMemoryUsageBytes() const {
-    // Uses 'capacity' (allocated) rather than 'size' (used) - this is
-    // deliberate, since any unused slots left over from the doubling
-    // resize strategy are still real allocated memory sitting idle.
-    return (long long)capacity * sizeof(Patient) + sizeof(*this);
-}
-
-// ---------- Quick Sort ----------
+// ---------- Quick Sort (middle-element pivot, Hoare-style partition) ----------
+// 'depth'/'maxDepth' track recursion depth so stack memory can be estimated.
 static void quickSortArray(Patient* values, int low, int high, SortKey key,
-    SortResult& result) {
+    SortResult& result, int depth, int& maxDepth) {
+    if (depth > maxDepth) maxDepth = depth;
     int i = low, j = high;
     double pivot = getSortValue(values[low + (high - low) / 2], key);
     while (i <= j) {
@@ -345,20 +180,23 @@ static void quickSortArray(Patient* values, int low, int high, SortKey key,
             i++; j--;
         }
     }
-    if (low < j) quickSortArray(values, low, j, key, result);
-    if (i < high) quickSortArray(values, i, high, key, result);
+    if (low < j) quickSortArray(values, low, j, key, result, depth + 1, maxDepth);
+    if (i < high) quickSortArray(values, i, high, key, result, depth + 1, maxDepth);
 }
 
 SortResult PatientArray::quickSort(SortKey key) {
-    SortResult result = { 0, 0, 0.0 };
+    SortResult result = { 0, 0, 0.0, 0 };
+    int maxDepth = 0;
     auto start = high_resolution_clock::now();
-    if (size > 1) quickSortArray(list, 0, size - 1, key, result);
+    if (size > 1) quickSortArray(list, 0, size - 1, key, result, 1, maxDepth);
     auto end = high_resolution_clock::now();
     result.timeMs = duration<double, std::milli>(end - start).count();
+    result.auxBytes = (long long)maxDepth * 64; // ~64 B of stack per recursive call
     return result;
 }
 
-// Radix sort uses whole units for age/duration and cents for total cost.
+// ---------- Radix Sort (LSD, counting sort per digit) ----------
+// Uses whole units for age/duration and cents for total cost.
 static unsigned long long radixValue(const Patient& p, SortKey key) {
     if (key == SORT_BY_AGE) return (unsigned long long)p.age;
     if (key == SORT_BY_LENGTH_OF_STAY) return (unsigned long long)p.lengthOfStay;
@@ -366,10 +204,10 @@ static unsigned long long radixValue(const Patient& p, SortKey key) {
 }
 
 SortResult PatientArray::radixSort(SortKey key) {
-    SortResult result = { 0, 0, 0.0 };
+    SortResult result = { 0, 0, 0.0, 0 };
     auto start = high_resolution_clock::now();
     if (size > 1) {
-        Patient* output = new Patient[size];
+        Patient* output = new Patient[size]; // full-size scratch copy of the data
         unsigned long long maxValue = 0;
         for (int i = 0; i < size; i++)
             if (radixValue(list[i], key) > maxValue) maxValue = radixValue(list[i], key);
@@ -380,15 +218,226 @@ SortResult PatientArray::radixSort(SortKey key) {
             for (int i = size - 1; i >= 0; i--) {
                 int digit = (int)((radixValue(list[i], key) / place) % 10);
                 output[--counts[digit]] = list[i];
-                result.swaps++;
+                result.swaps++; // counts element moves; radix makes no comparisons
             }
             for (int i = 0; i < size; i++) list[i] = output[i];
             if (place > maxValue / 10) break;
             place *= 10;
         }
         delete[] output;
+        result.auxBytes = (long long)size * sizeof(Patient) + 10 * sizeof(int);
     }
     auto end = high_resolution_clock::now();
     result.timeMs = duration<double, std::milli>(end - start).count();
     return result;
+}
+
+// ---------- Merge Sort (top-down, needs a temporary array) ----------
+// Merging must copy elements into a scratch array (unlike the linked-list
+// version, which just rewires pointers), so it costs O(n) extra memory.
+static void mergeSortArray(Patient* values, Patient* temp, int low, int high,
+    SortKey key, SortResult& result) {
+    if (low >= high) return;
+    int mid = low + (high - low) / 2;
+    mergeSortArray(values, temp, low, mid, key, result);
+    mergeSortArray(values, temp, mid + 1, high, key, result);
+
+    int i = low, j = mid + 1, k = low;
+    while (i <= mid && j <= high) {
+        result.comparisons++;
+        if (getSortValue(values[j], key) < getSortValue(values[i], key))
+            temp[k++] = values[j++];
+        else
+            temp[k++] = values[i++]; // ties take the left element - stable
+        result.swaps++; // counts an element move
+    }
+    while (i <= mid) { temp[k++] = values[i++]; result.swaps++; }
+    while (j <= high) { temp[k++] = values[j++]; result.swaps++; }
+    for (k = low; k <= high; k++) values[k] = temp[k];
+}
+
+SortResult PatientArray::mergeSort(SortKey key) {
+    SortResult result = { 0, 0, 0.0, 0 };
+    auto start = high_resolution_clock::now();
+    if (size > 1) {
+        Patient* temp = new Patient[size];
+        mergeSortArray(list, temp, 0, size - 1, key, result);
+        delete[] temp;
+        result.auxBytes = (long long)size * sizeof(Patient);
+    }
+    auto end = high_resolution_clock::now();
+    result.timeMs = duration<double, std::milli>(end - start).count();
+    return result;
+}
+
+// ==================== SEARCHING (Section 7) ====================
+// 'comparisons' counts criterion checks; 'steps' counts array elements
+// examined or copied. 'auxBytes' is the result buffer: the array must
+// pre-allocate room for the WORST CASE (all records match), which is a
+// real cost of using a fixed-size array for search results.
+
+SearchResult PatientArray::searchByAgeRangeUnsorted(int minAge, int maxAge,
+    Patient*& outMatches, int& outMatchCount) const {
+    SearchResult result = { 0, 0, 0, 0.0, 0 };
+    outMatchCount = 0;
+
+    outMatches = new Patient[size > 0 ? size : 1]; // worst case: all match
+    result.auxBytes = (long long)size * sizeof(Patient);
+
+    auto start = high_resolution_clock::now();
+
+    // Every element must be checked - matches could be anywhere.
+    for (int i = 0; i < size; i++) {
+        result.steps++;
+        result.comparisons++;
+        if (list[i].age >= minAge && list[i].age <= maxAge) {
+            outMatches[outMatchCount] = list[i];
+            outMatchCount++;
+        }
+    }
+
+    auto end = high_resolution_clock::now();
+    result.timeMs = duration<double, std::milli>(end - start).count();
+    result.matchCount = outMatchCount;
+    return result;
+}
+
+SearchResult PatientArray::searchByAgeRangeSorted(int minAge, int maxAge,
+    Patient*& outMatches, int& outMatchCount) const {
+    SearchResult result = { 0, 0, 0, 0.0, 0 };
+    outMatchCount = 0;
+
+    outMatches = new Patient[size > 0 ? size : 1];
+    result.auxBytes = (long long)size * sizeof(Patient);
+
+    auto start = high_resolution_clock::now();
+
+    // Binary search for the FIRST index where age >= minAge.
+    // Requires the array to already be sorted ascending by Age.
+    int low = 0, high = size - 1, boundary = size; // default: no match
+    while (low <= high) {
+        int mid = (low + high) / 2;
+        result.comparisons++;
+        result.steps++;
+        if (list[mid].age >= minAge) {
+            boundary = mid;
+            high = mid - 1; // keep looking left for an earlier match
+        }
+        else {
+            low = mid + 1;
+        }
+    }
+
+    // Matches are contiguous from 'boundary'; stop the instant we pass maxAge.
+    for (int i = boundary; i < size; i++) {
+        result.steps++;
+        result.comparisons++;
+        if (list[i].age > maxAge)
+            break;
+        outMatches[outMatchCount] = list[i];
+        outMatchCount++;
+    }
+
+    auto end = high_resolution_clock::now();
+    result.timeMs = duration<double, std::milli>(end - start).count();
+    result.matchCount = outMatchCount;
+    return result;
+}
+
+SearchResult PatientArray::searchByCareType(const string& careType,
+    Patient*& outMatches, int& outMatchCount) const {
+    SearchResult result = { 0, 0, 0, 0.0, 0 };
+    outMatchCount = 0;
+
+    outMatches = new Patient[size > 0 ? size : 1];
+    result.auxBytes = (long long)size * sizeof(Patient);
+
+    auto start = high_resolution_clock::now();
+
+    // CareType has no natural numeric order, so this is always linear.
+    for (int i = 0; i < size; i++) {
+        result.steps++;
+        result.comparisons++;
+        if (list[i].careType == careType) {
+            outMatches[outMatchCount] = list[i];
+            outMatchCount++;
+        }
+    }
+
+    auto end = high_resolution_clock::now();
+    result.timeMs = duration<double, std::milli>(end - start).count();
+    result.matchCount = outMatchCount;
+    return result;
+}
+
+SearchResult PatientArray::searchByDurationThresholdUnsorted(int minHours,
+    Patient*& outMatches, int& outMatchCount) const {
+    SearchResult result = { 0, 0, 0, 0.0, 0 };
+    outMatchCount = 0;
+
+    outMatches = new Patient[size > 0 ? size : 1];
+    result.auxBytes = (long long)size * sizeof(Patient);
+
+    auto start = high_resolution_clock::now();
+
+    for (int i = 0; i < size; i++) {
+        result.steps++;
+        result.comparisons++;
+        if (list[i].lengthOfStay > minHours) {
+            outMatches[outMatchCount] = list[i];
+            outMatchCount++;
+        }
+    }
+
+    auto end = high_resolution_clock::now();
+    result.timeMs = duration<double, std::milli>(end - start).count();
+    result.matchCount = outMatchCount;
+    return result;
+}
+
+SearchResult PatientArray::searchByDurationThresholdSorted(int minHours,
+    Patient*& outMatches, int& outMatchCount) const {
+    SearchResult result = { 0, 0, 0, 0.0, 0 };
+    outMatchCount = 0;
+
+    outMatches = new Patient[size > 0 ? size : 1];
+    result.auxBytes = (long long)size * sizeof(Patient);
+
+    auto start = high_resolution_clock::now();
+
+    // Binary search for the FIRST index where lengthOfStay > minHours.
+    // Requires the array to already be sorted ascending by LengthOfStay.
+    int low = 0, high = size - 1, boundary = size;
+    while (low <= high) {
+        int mid = (low + high) / 2;
+        result.comparisons++;
+        result.steps++;
+        if (list[mid].lengthOfStay > minHours) {
+            boundary = mid;
+            high = mid - 1;
+        }
+        else {
+            low = mid + 1;
+        }
+    }
+
+    // Everything from 'boundary' to the end qualifies - no more comparisons,
+    // only copying (each copied element is one step).
+    for (int i = boundary; i < size; i++) {
+        result.steps++;
+        outMatches[outMatchCount] = list[i];
+        outMatchCount++;
+    }
+
+    auto end = high_resolution_clock::now();
+    result.timeMs = duration<double, std::milli>(end - start).count();
+    result.matchCount = outMatchCount;
+    return result;
+}
+
+// ==================== PERFORMANCE ANALYSIS (Section 8) ====================
+long long PatientArray::getMemoryUsageBytes() const {
+    // Uses 'capacity' (allocated), not 'size' (used): unused slots left over
+    // from the doubling strategy are still real memory sitting idle.
+    return (long long)capacity * sizeof(Patient) + sizeof(*this);
 }
