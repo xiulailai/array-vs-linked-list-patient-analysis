@@ -48,9 +48,9 @@ int main() {
     const int NUM_DATASETS = 3;
 
     string filenames[NUM_DATASETS] = {
-        "../Data/dataset1_facility_a.csv",
-        "../Data/dataset2_facility_b.csv",
-        "../Data/dataset3_facility_c.csv"
+        "../../Data/dataset1_facility_a.csv",
+        "../../Data/dataset2_facility_b.csv",
+        "../../Data/dataset3_facility_c.csv"
     };
 
     string labels[NUM_DATASETS] = {
@@ -173,32 +173,38 @@ int main() {
     // Tier 2 - LinkedList vs LinkedList: same structure, across sort keys
     // ==================================================================
     cout << "\n\n==================================================\n";
-    cout << " SORTING PERFORMANCE ANALYSIS - LINKED LIST (Bubble Sort)\n";
+    cout << " SORTING PERFORMANCE ANALYSIS - LINKED LIST\n";
     cout << " Tier 2: comparing sort keys WITHIN the linked list structure\n";
     cout << "==================================================\n";
 
     SortKey keys[3] = { SORT_BY_AGE, SORT_BY_LENGTH_OF_STAY, SORT_BY_TOTAL_COST };
 
-    ofstream sortResultsFile("../Data/LinkedList_SortResults.csv");
-    sortResultsFile << "Facility,SortKey,Comparisons,Swaps,TimeMs\n";
+    ofstream sortResultsFile("../../Data/LinkedList_SortResults.csv");
+    sortResultsFile << "Facility,Algorithm,SortKey,Comparisons,Swaps,TimeMs\n";
 
     for (int d = 0; d < NUM_DATASETS; d++) {
         cout << "\n--- " << labels[d] << " ---\n";
         cout << left
+            << setw(18) << "Algorithm"
             << setw(20) << "Sort Key"
             << setw(16) << "Comparisons"
             << setw(12) << "Swaps"
             << setw(14) << "Time (ms)"
             << endl;
-        cout << string(62, '-') << endl;
+        cout << string(80, '-') << endl;
 
-        for (int k = 0; k < 3; k++) {
+        for (int a = 0; a < 3; a++) for (int k = 0; k < 3; k++) {
             PatientLinkedList facility;
             facility.loadFromCSV(filenames[d]);
 
-            SortResult result = facility.bubbleSort(keys[k]);
+            SortResult result;
+            if (a == 0) result = facility.bubbleSort(keys[k]);
+            else if (a == 1) result = facility.quickSort(keys[k]);
+            else result = facility.radixSort(keys[k]);
+            string algorithm = (a == 0) ? "Bubble Sort" : (a == 1) ? "Quick Sort" : "Radix Sort";
 
             cout << left
+                << setw(18) << algorithm
                 << setw(20) << sortKeyLabel(keys[k])
                 << setw(16) << result.comparisons
                 << setw(12) << result.swaps
@@ -206,7 +212,7 @@ int main() {
                 << endl;
 
             if (sortResultsFile.is_open()) {
-                sortResultsFile << shortLabels[d] << ","
+                sortResultsFile << shortLabels[d] << "," << algorithm << ","
                     << sortKeyLabel(keys[k]) << ","
                     << result.comparisons << ","
                     << result.swaps << ","
@@ -235,7 +241,7 @@ int main() {
     const string SEARCH_CARE_TYPE = "Emergency";
     const int DURATION_THRESHOLD = 24;
 
-    ofstream searchResultsFile("../Data/LinkedList_SearchResults.csv");
+    ofstream searchResultsFile("../../Data/LinkedList_SearchResults.csv");
     searchResultsFile << "Facility,SearchType,Mode,Comparisons,Matches,TimeMs\n";
 
     for (int d = 0; d < NUM_DATASETS; d++) {
@@ -338,7 +344,7 @@ int main() {
         << endl;
     cout << string(88, '-') << endl;
 
-    ofstream memoryResultsFile("../Data/LinkedList_MemoryUsage.csv");
+    ofstream memoryResultsFile("../../Data/LinkedList_MemoryUsage.csv");
     memoryResultsFile << "Facility,Patients,MemoryBytes,BytesPerPatient\n";
 
     for (int d = 0; d < NUM_DATASETS; d++) {

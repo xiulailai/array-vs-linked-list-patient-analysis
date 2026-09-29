@@ -44,6 +44,8 @@ public:
 
     // Sorts the array in place by the given key using Bubble Sort.
     SortResult bubbleSort(SortKey key);
+    SortResult quickSort(SortKey key);
+    SortResult radixSort(SortKey key);
 
     // ---------- Searching (Section 7) ----------
     SearchResult searchByAgeRangeUnsorted(int minAge, int maxAge,

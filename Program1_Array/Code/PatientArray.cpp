@@ -9,6 +9,7 @@
 #include <sstream>
 #include <iomanip>
 #include <chrono>
+#include <cmath>
 using namespace std;
 using namespace std::chrono;
 
@@ -318,4 +319,76 @@ long long PatientArray::getMemoryUsageBytes() const {
     // deliberate, since any unused slots left over from the doubling
     // resize strategy are still real allocated memory sitting idle.
     return (long long)capacity * sizeof(Patient) + sizeof(*this);
+}
+
+// ---------- Quick Sort ----------
+static void quickSortArray(Patient* values, int low, int high, SortKey key,
+    SortResult& result) {
+    int i = low, j = high;
+    double pivot = getSortValue(values[low + (high - low) / 2], key);
+    while (i <= j) {
+        while (true) {
+            result.comparisons++;
+            if (!(getSortValue(values[i], key) < pivot)) break;
+            i++;
+        }
+        while (true) {
+            result.comparisons++;
+            if (!(getSortValue(values[j], key) > pivot)) break;
+            j--;
+        }
+        if (i <= j) {
+            if (i != j) {
+                Patient temp = values[i]; values[i] = values[j]; values[j] = temp;
+                result.swaps++;
+            }
+            i++; j--;
+        }
+    }
+    if (low < j) quickSortArray(values, low, j, key, result);
+    if (i < high) quickSortArray(values, i, high, key, result);
+}
+
+SortResult PatientArray::quickSort(SortKey key) {
+    SortResult result = { 0, 0, 0.0 };
+    auto start = high_resolution_clock::now();
+    if (size > 1) quickSortArray(list, 0, size - 1, key, result);
+    auto end = high_resolution_clock::now();
+    result.timeMs = duration<double, std::milli>(end - start).count();
+    return result;
+}
+
+// Radix sort uses whole units for age/duration and cents for total cost.
+static unsigned long long radixValue(const Patient& p, SortKey key) {
+    if (key == SORT_BY_AGE) return (unsigned long long)p.age;
+    if (key == SORT_BY_LENGTH_OF_STAY) return (unsigned long long)p.lengthOfStay;
+    return (unsigned long long)llround(getSortValue(p, key) * 100.0);
+}
+
+SortResult PatientArray::radixSort(SortKey key) {
+    SortResult result = { 0, 0, 0.0 };
+    auto start = high_resolution_clock::now();
+    if (size > 1) {
+        Patient* output = new Patient[size];
+        unsigned long long maxValue = 0;
+        for (int i = 0; i < size; i++)
+            if (radixValue(list[i], key) > maxValue) maxValue = radixValue(list[i], key);
+        for (unsigned long long place = 1; maxValue / place > 0;) {
+            int counts[10] = { 0 };
+            for (int i = 0; i < size; i++) counts[(radixValue(list[i], key) / place) % 10]++;
+            for (int i = 1; i < 10; i++) counts[i] += counts[i - 1];
+            for (int i = size - 1; i >= 0; i--) {
+                int digit = (int)((radixValue(list[i], key) / place) % 10);
+                output[--counts[digit]] = list[i];
+                result.swaps++;
+            }
+            for (int i = 0; i < size; i++) list[i] = output[i];
+            if (place > maxValue / 10) break;
+            place *= 10;
+        }
+        delete[] output;
+    }
+    auto end = high_resolution_clock::now();
+    result.timeMs = duration<double, std::milli>(end - start).count();
+    return result;
 }

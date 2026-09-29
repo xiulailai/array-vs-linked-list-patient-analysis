@@ -1,0 +1,16 @@
+Facility,SearchType,Mode,Comparisons,Matches,TimeMs
+Facility A,AgeRange,Unsorted,200,95,0.0000
+Facility A,AgeRange,Sorted,103,95,0.0000
+Facility A,CareType,Linear,200,67,0.0000
+Facility A,Duration,Unsorted,200,74,0.0000
+Facility A,Duration,Sorted,8,74,0.0000
+Facility B,AgeRange,Unsorted,200,0,0.0000
+Facility B,AgeRange,Sorted,8,0,0.0000
+Facility B,CareType,Linear,200,27,0.0000
+Facility B,Duration,Unsorted,200,0,0.0000
+Facility B,Duration,Sorted,8,0,0.0000
+Facility C,AgeRange,Unsorted,200,86,0.0000
+Facility C,AgeRange,Sorted,94,86,0.0000
+Facility C,CareType,Linear,200,0,0.0000
+Facility C,Duration,Unsorted,200,30,0.0000
+Facility C,Duration,Sorted,8,30,0.0000

@@ -9,6 +9,7 @@
 #include <sstream>
 #include <iomanip>
 #include <chrono>
+#include <cmath>
 using namespace std;
 using namespace std::chrono;
 
@@ -337,4 +338,81 @@ long long PatientLinkedList::getMemoryUsageBytes() const {
     // array's doubling strategy - but each Node adds one pointer's
     // worth of overhead (the 'next' field) that the array doesn't pay.
     return (long long)size * sizeof(Node) + sizeof(*this);
+}
+
+static void quickSortNodes(Node* first, Node* last, SortKey key, SortResult& result) {
+    if (first == nullptr || last == nullptr || first == last) return;
+    double pivot = getSortValue(last->data, key);
+    Node* boundary = first;
+    for (Node* current = first; current != last; current = current->next) {
+        result.comparisons++;
+        if (getSortValue(current->data, key) <= pivot) {
+            if (boundary != current) {
+                Patient temp = boundary->data; boundary->data = current->data; current->data = temp;
+                result.swaps++;
+            }
+            boundary = boundary->next;
+        }
+    }
+    if (boundary != last) {
+        Patient temp = boundary->data; boundary->data = last->data; last->data = temp;
+        result.swaps++;
+    }
+    Node* pivotNode = boundary;
+    if (pivotNode != first) {
+        Node* before = first;
+        while (before->next != pivotNode) before = before->next;
+        quickSortNodes(first, before, key, result);
+    }
+    if (pivotNode != last && pivotNode->next != nullptr)
+        quickSortNodes(pivotNode->next, last, key, result);
+}
+
+SortResult PatientLinkedList::quickSort(SortKey key) {
+    SortResult result = { 0, 0, 0.0 };
+    auto start = high_resolution_clock::now();
+    if (head != nullptr) quickSortNodes(head, tail, key, result);
+    auto end = high_resolution_clock::now();
+    result.timeMs = duration<double, std::milli>(end - start).count();
+    return result;
+}
+
+static unsigned long long linkedRadixValue(const Patient& p, SortKey key) {
+    if (key == SORT_BY_AGE) return (unsigned long long)p.age;
+    if (key == SORT_BY_LENGTH_OF_STAY) return (unsigned long long)p.lengthOfStay;
+    return (unsigned long long)llround(getSortValue(p, key) * 100.0);
+}
+
+SortResult PatientLinkedList::radixSort(SortKey key) {
+    SortResult result = { 0, 0, 0.0 };
+    auto start = high_resolution_clock::now();
+    unsigned long long maxValue = 0;
+    for (Node* current = head; current != nullptr; current = current->next)
+        if (linkedRadixValue(current->data, key) > maxValue) maxValue = linkedRadixValue(current->data, key);
+
+    for (unsigned long long place = 1; maxValue / place > 0;) {
+        Node* bucketHead[10] = { nullptr }; Node* bucketTail[10] = { nullptr };
+        Node* current = head;
+        while (current != nullptr) {
+            Node* next = current->next;
+            current->next = nullptr;
+            int digit = (int)((linkedRadixValue(current->data, key) / place) % 10);
+            if (bucketHead[digit] == nullptr) bucketHead[digit] = current;
+            else bucketTail[digit]->next = current;
+            bucketTail[digit] = current;
+            result.swaps++;
+            current = next;
+        }
+        head = nullptr; tail = nullptr;
+        for (int i = 0; i < 10; i++) if (bucketHead[i] != nullptr) {
+            if (head == nullptr) head = bucketHead[i];
+            else tail->next = bucketHead[i];
+            tail = bucketTail[i];
+        }
+        if (place > maxValue / 10) break;
+        place *= 10;
+    }
+    auto end = high_resolution_clock::now();
+    result.timeMs = duration<double, std::milli>(end - start).count();
+    return result;
 }
