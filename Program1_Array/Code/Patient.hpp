@@ -1,10 +1,8 @@
-// ============================================================
 // Patient.hpp
 // CT077-3-2-DSTR  |  Shared Patient data structure (Array version)
-// ============================================================
+
 #ifndef PATIENT_HPP
 #define PATIENT_HPP
-
 #include <string>
 using namespace std;
 
@@ -13,10 +11,10 @@ using namespace std;
 struct Patient {
     string patientID;
     int age;
-    string careType;
-    int lengthOfStay;        // hours
-    double baseCostPerHour;  // MYR/hr
-    int daysVisitsPerYear;
+    string care_type;
+    int length_of_staying;        // hours
+    double base_cost_per_hour;  // MYR/hr
+    int day_visit_per_year;
 };
 
 #endif

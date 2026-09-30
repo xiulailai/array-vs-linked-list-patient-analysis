@@ -1,59 +1,52 @@
-// ============================================================
 // BillingSummary.cpp
 // CT077-3-2-DSTR  |  Dataset-Level Billing Summary (Linked List version)
-// ============================================================
+
 #include "BillingSummary.hpp"
 #include <iostream>
 #include <iomanip>
 using namespace std;
 
 BillingSummary::BillingSummary() {
-    careTypeCount = 0;
-    totalPatients = 0;
-    totalCost = 0.0;
-    totalLengthOfStay = 0;
+    care_type_count = 0;
+    total_patients = 0;
+    total_cost = 0.0;
+    total_length_of_staying = 0;
 }
 
-int BillingSummary::findOrAddCareType(const string& careType) {
-    for (int i = 0; i < careTypeCount; i++) {
-        if (careTypes[i].careType == careType)
+int BillingSummary::findOrAddCareType(const string& care_type) {
+    for (int i = 0; i < care_type_count; i++) {
+        if (care_types[i].care_type == care_type)
             return i;
     }
-    if (careTypeCount < MAX_CARE_TYPES) {
-        careTypes[careTypeCount].careType = careType;
-        careTypes[careTypeCount].count = 0;
-        careTypes[careTypeCount].totalCost = 0.0;
-        careTypeCount++;
-        return careTypeCount - 1;
+    if (care_type_count < max_care_types) {
+        care_types[care_type_count].care_type = care_type;
+        care_types[care_type_count].count = 0;
+        care_types[care_type_count].total_cost = 0.0;
+        care_type_count++;
+        return care_type_count - 1;
     }
     return -1; // no room left (shouldn't happen with realistic data)
 }
-
 void BillingSummary::addRecord(const Patient& p) {
     // Cost = LengthOfStay x BaseCostPerHour x DaysVisitsPerYear
-    double cost = p.lengthOfStay * p.baseCostPerHour * p.daysVisitsPerYear;
-
-    totalPatients++;
-    totalCost += cost;
-    totalLengthOfStay += p.lengthOfStay;
-
-    int idx = findOrAddCareType(p.careType);
+    double cost = p.length_of_staying * p.base_cost_per_hour * p.day_visit_per_year;
+    total_patients++;
+    total_cost += cost;
+    total_length_of_staying += p.length_of_staying;
+    int idx = findOrAddCareType(p.care_type);
     if (idx != -1) {
-        careTypes[idx].count++;
-        careTypes[idx].totalCost += cost;
+        care_types[idx].count++;
+        care_types[idx].total_cost += cost;
     }
 }
-
 void BillingSummary::analyze(const Node* head) {
     for (const Node* current = head; current != nullptr; current = current->next)
         addRecord(current->data);
 }
-
-void BillingSummary::printReport(const string& datasetLabel) const {
+void BillingSummary::printReport(const string& dataset_label) const {
     cout << "\n----------------------------------------\n";
-    cout << "Dataset Billing Summary: " << datasetLabel << "\n";
+    cout << "Dataset Billing Summary: " << dataset_label << "\n";
     cout << "----------------------------------------\n";
-
     cout << left
         << setw(18) << "Care Type"
         << setw(16) << "Patient Count"
@@ -61,39 +54,33 @@ void BillingSummary::printReport(const string& datasetLabel) const {
         << setw(20) << "Avg Cost/Patient"
         << endl;
     cout << string(72, '-') << endl;
-
     cout << fixed << setprecision(2);
-    for (int i = 0; i < careTypeCount; i++) {
-        double avgCost = (careTypes[i].count > 0)
-            ? (careTypes[i].totalCost / careTypes[i].count) : 0.0;
-
+    for (int i = 0; i < care_type_count; i++) {
+        double avg_cost = (care_types[i].count > 0)
+            ? (care_types[i].total_cost / care_types[i].count) : 0.0;
         cout << left
-            << setw(18) << careTypes[i].careType
-            << setw(16) << careTypes[i].count
-            << setw(18) << careTypes[i].totalCost
-            << setw(20) << avgCost
+            << setw(18) << care_types[i].care_type
+            << setw(16) << care_types[i].count
+            << setw(18) << care_types[i].total_cost
+            << setw(20) << avg_cost
             << endl;
     }
-
     cout << string(72, '-') << endl;
-    cout << "Total Patients: " << totalPatients << endl;
-    cout << "Total Billing for Dataset: RM " << totalCost << endl;
+    cout << "Total Patients: " << total_patients << endl;
+    cout << "Total Billing for Dataset: RM " << total_cost << endl;
     cout << "Average Cost per Patient: RM "
-        << (totalPatients > 0 ? totalCost / totalPatients : 0.0) << endl;
+        << (total_patients > 0 ? total_cost / total_patients : 0.0) << endl;
     cout << "Average Length of Stay: "
-        << (totalPatients > 0 ? (double)totalLengthOfStay / totalPatients : 0.0)
+        << (total_patients > 0 ? (double)total_length_of_staying / total_patients : 0.0)
         << " hours" << endl;
 }
-
-double BillingSummary::getTotalCost() const { return totalCost; }
-int BillingSummary::getTotalPatients() const { return totalPatients; }
-
+double BillingSummary::getTotalCost() const { return total_cost; }
+int BillingSummary::getTotalPatients() const { return total_patients; }
 double BillingSummary::getAverageLengthOfStay() const {
-    return (totalPatients > 0) ? (double)totalLengthOfStay / totalPatients : 0.0;
+    return (total_patients > 0) ? (double)total_length_of_staying / total_patients : 0.0;
 }
-
 // ---------- CareType accessors (Section 9 - Clinical Insights) ----------
-int BillingSummary::getCareTypeCount() const { return careTypeCount; }
-string BillingSummary::getCareTypeLabel(int index) const { return careTypes[index].careType; }
-int BillingSummary::getCareTypePatientCount(int index) const { return careTypes[index].count; }
-double BillingSummary::getCareTypeTotalCost(int index) const { return careTypes[index].totalCost; }
+int BillingSummary::getCareTypeCount() const { return care_type_count; }
+string BillingSummary::getCareTypeLabel(int index) const { return care_types[index].care_type; }
+int BillingSummary::getCareTypePatientCount(int index) const { return care_types[index].count; }
+double BillingSummary::getCareTypeTotalCost(int index) const { return care_types[index].total_cost; }

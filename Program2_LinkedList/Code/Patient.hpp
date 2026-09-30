@@ -1,22 +1,19 @@
-// ============================================================
 // Patient.hpp
 // CT077-3-2-DSTR  |  Shared Patient data structure (Linked List version)
-// ============================================================
+
 #ifndef PATIENT_HPP
 #define PATIENT_HPP
-
 #include <string>
 using namespace std;
 
 // Mirrors the dataset columns exactly:
 // PatientID, Age, CareType, LengthOfStay, BaseCostPerHour, DaysVisitsPerYear
 struct Patient {
-    string patientID;
+    string patient_id;
     int age;
-    string careType;
-    int lengthOfStay;        // hours
-    double baseCostPerHour;  // MYR/hr
-    int daysVisitsPerYear;
+    string care_type;
+    int length_of_staying;        // hours
+    double base_cost_per_hour;  // MYR/hr
+    int day_visit_per_year;
 };
-
 #endif
